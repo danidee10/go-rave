@@ -5,8 +5,8 @@ package rave
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -41,12 +41,14 @@ func jsonToInterfaceList(jsonData []byte) []interface{} {
 }
 
 // Check if an array of keys is set in map
-func checkRequiredParameters(params map[string]interface{}, keys []string) {
+func checkRequiredParameters(params map[string]interface{}, keys []string) error {
 	for _, key := range keys {
 		if _, ok := params[key]; !ok {
-			log.Fatalf("%s is a required parameter for this method", key)
+			return fmt.Errorf("\"%s\" is a required parameter for this method.", key)
 		}
 	}
+
+	return nil
 }
 
 // MakePostRequest : make s post request with the Content-Type set to application/json
