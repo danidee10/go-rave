@@ -1,6 +1,6 @@
 # go-rave
 
-go-rave is a python library for the flutterwave's [rave](http://rave.frontendpwc.com/) payment platform.
+go-rave is a Go library for flutterwave's [rave](http://rave.frontendpwc.com/) payment platform.
 
 It currently supports the following features:
 
@@ -28,13 +28,12 @@ It currently supports the following features:
 
 ## Set Up
 
-Go to [rave](http://rave.frontendpwc.com/) and sign up.
+Go to [rave](http://ravepay.co/) and sign up.
 This would provide you with a public and private authorization key which would be used throughout the library.
 
 Store these authorization keys in your environment as `RAVE_PUBLICKEY` for the public key and `RAVE_SECKEY`.
 
 They can be retrieved at runtime with `rave.GetPublicKey()` and `rave.GetSecretKey()` respectively.
-
 
 ## Getting Started
 
@@ -82,6 +81,8 @@ masterCard := map[string]interface{}{
 Parameters that are required by Rave's API are also checked. If any parameter is missing, `go-rave` will spit out a helpful log message and crash.
 
 All functions also return maps. To make it easier to read responses from the API.
+
+## Library methods/functions
 
 ### Payment with card or account
 
@@ -204,6 +205,15 @@ Finally, To Refund or void a transaction, call the `RefundOrVoid` method with va
 ```go
 transaction := map[string]interface{}{...}
 response := Rave.RefundOrVoid(transaction)
+```
+
+### IntegrityCheckSum
+
+The Integrity checksum is necessary to secure payments on the client side. To generate an integrity hash call the `CalculateIntegrityCheckSum` and pass in the data.
+
+```go
+data := map[string]interface{}{...}
+integrityCheckSum := Rave.CalculateIntegrityCheckSum(data)
 ```
 
 ## Contributing
