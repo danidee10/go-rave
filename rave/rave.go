@@ -15,7 +15,6 @@ type rave struct {
 	Live      bool
 	LiveURL   string
 	TestURL   string
-	Prefix    string // Your application name e.g FLUTTERWAVE
 }
 
 // getBaseURL : Returns the Correct URL based on Live status.
@@ -85,7 +84,7 @@ func (r rave) setUpCharge(chargeData map[string]interface{}) map[string]interfac
 
 // ChargeCard: Contains the actual logic for making requests to the charge endpoint
 func (r rave) chargeCard(postData map[string]interface{}) map[string]interface{} {
-	URL := r.getBaseURL() + "/getpaidx/api/charge"
+	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/charge"
 
 	response := MakePostRequest(URL, postData)
 
@@ -96,7 +95,7 @@ func (r rave) chargeCard(postData map[string]interface{}) map[string]interface{}
 func (r rave) ValidateCharge(data map[string]interface{}) map[string]interface{} {
 
 	data["PBFPubKey"] = r.GetPublicKey()
-	URL := r.getBaseURL() + "/getpaidx/api/validatecharge"
+	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/validatecharge"
 
 	response := MakePostRequest(URL, data)
 
@@ -107,7 +106,7 @@ func (r rave) ValidateCharge(data map[string]interface{}) map[string]interface{}
 func (r rave) ValidateAccountCharge(data map[string]interface{}) map[string]interface{} {
 
 	data["PBFPubKey"] = r.GetPublicKey()
-	URL := r.getBaseURL() + "/getpaidx/api/validate"
+	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/validate"
 
 	response := MakePostRequest(URL, data)
 
@@ -117,7 +116,7 @@ func (r rave) ValidateAccountCharge(data map[string]interface{}) map[string]inte
 // VerifyTransaction: Verify a transaction using "flw_ref" or "tx_ref"
 func (r rave) VerifyTransaction(data map[string]interface{}) map[string]interface{} {
 	data["SECKEY"] = r.GetSecretKey()
-	URL := r.getBaseURL() + "/getpaidx/api/verify"
+	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/verify"
 
 	response := MakePostRequest(URL, data)
 
@@ -126,7 +125,7 @@ func (r rave) VerifyTransaction(data map[string]interface{}) map[string]interfac
 
 func (r rave) XrequeryTransactionVerification(data map[string]interface{}) map[string]interface{} {
 	data["SECKEY"] = r.GetSecretKey()
-	URL := r.getBaseURL() + "/getpaidx/api/xrequery"
+	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/xrequery"
 
 	response := MakePostRequest(URL, data)
 
@@ -146,7 +145,7 @@ func (r rave) PreauthorizeCard(chargeData map[string]interface{}) map[string]int
 
 func (r rave) Capture(data map[string]interface{}) map[string]interface{} {
 	data["SECKEY"] = r.GetSecretKey()
-	URL := r.getBaseURL() + "/getpaidx/api/capture"
+	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/capture"
 
 	response := MakePostRequest(URL, data)
 
@@ -156,7 +155,7 @@ func (r rave) Capture(data map[string]interface{}) map[string]interface{} {
 // RefundOrVoid : Refund or void a captured amount
 func (r rave) RefundOrVoid(data map[string]interface{}) map[string]interface{} {
 	data["SECKEY"] = r.GetSecretKey()
-	URL := r.getBaseURL() + "/getpaidx/api/refundorvoid"
+	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/refundorvoid"
 
 	response := MakePostRequest(URL, data)
 
@@ -166,7 +165,7 @@ func (r rave) RefundOrVoid(data map[string]interface{}) map[string]interface{} {
 // GetFees
 func (r rave) GetFees(data map[string]interface{}) map[string]interface{} {
 	data["PBFPubKey"] = r.GetPublicKey()
-	URL := r.getBaseURL() + "/getpaidx/api/fee"
+	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/fee"
 
 	response := MakePostRequest(URL, data)
 
@@ -175,13 +174,8 @@ func (r rave) GetFees(data map[string]interface{}) map[string]interface{} {
 
 // Refund : Refund direct charges
 func (r rave) Refund(data map[string]interface{}) map[string]interface{} {
-	data["seckey"] = r.GetSecretKey()
-	var URL string
-	if r.Live {
-		URL = "http://flw-pms-dev.eu-west-1.elasticbeanstalk.com/gpx/merchant/transactions/refund"
-	} else {
-		URL = "http://flw-pms-dev.eu-west-1.elasticbeanstalk.com/gpx/merchant/transactions/refund"
-	}
+	data["seckey"] = r.GetSecretKey() 
+	URL := r.getBaseURL() + "/gpx/merchant/transactions/refund"
 
 	response := MakePostRequest(URL, data)
 
@@ -190,7 +184,7 @@ func (r rave) Refund(data map[string]interface{}) map[string]interface{} {
 
 // ListBanks : List Nigerian banks.
 func (r rave) ListBanks() []interface{} {
-	URL := r.getBaseURL() + "/getpaidx/api/flwpbf-banks.js?json=1"
+	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/flwpbf-banks.js?json=1"
 	response, err := http.Get(URL)
 	if err != nil {
 		panic(err)
@@ -207,7 +201,8 @@ func (r rave) ListBanks() []interface{} {
 // NewRave : Constructor for rave struct
 func NewRave() rave {
 	Rave := rave{}
-	Rave.TestURL = "http://flw-pms-dev.eu-west-1.elasticbeanstalk.com/flwv3-pug"
+	Rave.TestURL = "http://flw-pms-dev.eu-west-1.elasticbeanstalk.com"
+	Rave.LiveURL = "https://api.ravepay.co"
 
 	return Rave
 }
