@@ -1,9 +1,11 @@
 package rave
 
 import (
-	"bytes"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
+	"reflect"
 )
 
 // Rave : Base Rave type
@@ -27,152 +29,116 @@ func (r rave) getBaseURL() string {
 
 // GetPublicKey: Get Rave Public key
 func (r rave) GetPublicKey() string {
-	return "FLWPUBK-519ac5f00bd2855a2f25c556c01888cd-X"
+	publicKey, found := os.LookupEnv("RAVE_PUBLICKEY")
+	if !found {
+		log.Fatal("You must set the \"RAVE_PUBLICKEY\" environment variable")
+	}
+
+	return publicKey
 }
 
 // GetSecretKey: Get Rave Secret key
 func (r rave) GetSecretKey() string {
-	return "FLWSECK-dfc21e7469c575750846ee73820b6374-X"
+	secKey, found := os.LookupEnv("RAVE_SECKEY")
+	if !found {
+		log.Fatal("You must set the \"RAVE_SECKEY\" environment variable")
+	}
+
+	return secKey
 }
 
-func (r rave) AccountChargeNigeria() {
+// ChargeCard : Sends a Card request and determines the validation flow to be used
+func (r rave) ChargeCard(chargeData map[string]interface{}) map[string]interface{} {
+	postData := r.setUpCharge(chargeData)
+	response := r.chargeCard(postData)
 
+	// If suggested_auth == "PIN" was returned in the response
+	// Encrypt the client's data with the otp details and make another request
+	suggestedAuthData := response["data"]
+	if reflect.DeepEqual(suggestedAuthData, map[string]interface{}{"suggested_auth": "PIN"}) {
+		chargeData["suggested_auth"] = "PIN"
+		checkRequiredParameters(chargeData, []string{"pin"})
+
+		postData := r.setUpCharge(chargeData)
+		response := r.chargeCard(postData)
+
+		return response
+	}
+
+	return response
 }
 
-func (r rave) AccountChargeInternational() {
-
-}
-
-// ChargeCard: Charge a card
-func (r rave) ChargeCard(clientData map[string]interface{}) map[string]interface{} {
-
-	clientJSON := mapToJSON(clientData)
-
+// Encrypts and setup a charge (Payment/account) with the secret key and algorithm
+func (r rave) setUpCharge(chargeData map[string]interface{}) map[string]interface{} {
 	key := r.GetKey(r.GetSecretKey())
-	encryptedClientData := r.Encrypt3Des(key, string(clientJSON[:]))
+	chargeJSON := mapToJSON(chargeData)
+	encryptedchargeData := r.Encrypt3Des(key, string(chargeJSON[:]))
 
 	data := map[string]interface{}{
 		"PBFPubKey": r.GetPublicKey(),
-		"client":    encryptedClientData,
+		"client":    encryptedchargeData,
 		"alg":       "3DES-24",
 	}
 
-	postData := mapToJSON(data)
+	return data
+}
 
+// ChargeCard: Contains the actual logic for making requests to the charge endpoint
+func (r rave) chargeCard(postData map[string]interface{}) map[string]interface{} {
 	URL := r.getBaseURL() + "/getpaidx/api/charge"
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
-	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+	response := MakePostRequest(URL, postData)
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return jsonToMap(body)
+	return response
 }
 
 // ValidateCharge : Validate a card charge using OTP
 func (r rave) ValidateCharge(data map[string]interface{}) map[string]interface{} {
 
 	data["PBFPubKey"] = r.GetPublicKey()
-	postData := mapToJSON(data)
-
 	URL := r.getBaseURL() + "/getpaidx/api/validatecharge"
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
-	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+	response := MakePostRequest(URL, data)
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return jsonToMap(body)
+	return response
 }
 
 // ValidateAccountCharge : Validate an account charge using OTP
 func (r rave) ValidateAccountCharge(data map[string]interface{}) map[string]interface{} {
 
 	data["PBFPubKey"] = r.GetPublicKey()
-	postData := mapToJSON(data)
-
 	URL := r.getBaseURL() + "/getpaidx/api/validate"
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
-	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+	response := MakePostRequest(URL, data)
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return jsonToMap(body)
+	return response
 }
 
 // VerifyTransaction: Verify a transaction using "flw_ref" or "tx_ref"
 func (r rave) VerifyTransaction(data map[string]interface{}) map[string]interface{} {
 	data["SECKEY"] = r.GetSecretKey()
-
-	postData := mapToJSON(data)
-
 	URL := r.getBaseURL() + "/getpaidx/api/verify"
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
-	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+	response := MakePostRequest(URL, data)
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return jsonToMap(body)
+	return response
 }
 
 func (r rave) XrequeryTransactionVerification(data map[string]interface{}) map[string]interface{} {
 	data["SECKEY"] = r.GetSecretKey()
-
-	postData := mapToJSON(data)
-
 	URL := r.getBaseURL() + "/getpaidx/api/xrequery"
 
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
-	req.Header.Set("Content-Type", "application/json")
+	response := MakePostRequest(URL, data)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return jsonToMap(body)
-}
-
-func (r rave) RetryTransaction() {
-
+	return response
 }
 
 // PreauthorizeCard : This is just a wrapper arond the Charge function that automatically
 // sets "charge_type" to "pre_auth"
-func (r rave) PreauthorizeCard(clientData map[string]interface{}) map[string]interface{} {
-	clientData["charge_type"] = "pre_auth"
+func (r rave) PreauthorizeCard(chargeData map[string]interface{}) map[string]interface{} {
+	chargeData["charge_type"] = "pre_auth"
 
-	ret := r.ChargeCard(clientData)
+	ret := r.ChargeCard(chargeData)
 
 	return ret
 
@@ -180,101 +146,50 @@ func (r rave) PreauthorizeCard(clientData map[string]interface{}) map[string]int
 
 func (r rave) Capture(data map[string]interface{}) map[string]interface{} {
 	data["SECKEY"] = r.GetSecretKey()
-
-	postData := mapToJSON(data)
-
 	URL := r.getBaseURL() + "/getpaidx/api/capture"
 
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
-	req.Header.Set("Content-Type", "application/json")
+	response := MakePostRequest(URL, data)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return jsonToMap(body)
+	return response
 }
 
 // RefundOrVoid : Refund or void a captured amount
 func (r rave) RefundOrVoid(data map[string]interface{}) map[string]interface{} {
 	data["SECKEY"] = r.GetSecretKey()
-
-	postData := mapToJSON(data)
-
 	URL := r.getBaseURL() + "/getpaidx/api/refundorvoid"
 
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
-	req.Header.Set("Content-Type", "application/json")
+	response := MakePostRequest(URL, data)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return jsonToMap(body)
+	return response
 }
 
 // GetFees
 func (r rave) GetFees(data map[string]interface{}) map[string]interface{} {
 	data["PBFPubKey"] = r.GetPublicKey()
-
-	postData := mapToJSON(data)
-
 	URL := r.getBaseURL() + "/getpaidx/api/fee"
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
-	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+	response := MakePostRequest(URL, data)
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return jsonToMap(body)
+	return response
 }
 
 // Refund : Refund direct charges
 func (r rave) Refund(data map[string]interface{}) map[string]interface{} {
 	data["seckey"] = r.GetSecretKey()
-
-	postData := mapToJSON(data)
-
 	var URL string
 	if r.Live {
 		URL = "http://flw-pms-dev.eu-west-1.elasticbeanstalk.com/gpx/merchant/transactions/refund"
 	} else {
 		URL = "http://flw-pms-dev.eu-west-1.elasticbeanstalk.com/gpx/merchant/transactions/refund"
 	}
-	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
-	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+	response := MakePostRequest(URL, data)
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return jsonToMap(body)
-
+	return response
 }
 
 // ListBanks : List Nigerian banks.
-func (r rave) ListBanks() *http.Response {
+func (r rave) ListBanks() []interface{} {
 	URL := r.getBaseURL() + "/getpaidx/api/flwpbf-banks.js?json=1"
 	response, err := http.Get(URL)
 	if err != nil {
@@ -282,7 +197,11 @@ func (r rave) ListBanks() *http.Response {
 	}
 	defer response.Body.Close()
 
-	return response
+	body, _ := ioutil.ReadAll(response.Body)
+
+	returnData := jsonToInterfaceList(body)
+
+	return returnData
 }
 
 // NewRave : Constructor for rave struct
