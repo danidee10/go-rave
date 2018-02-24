@@ -22,7 +22,7 @@ func TestCheckRequiredParametersFail(t *testing.T) {
 
 	err := checkRequiredParameters(params, []string{"address"})
 
-	assertEqual(t, err.Error(), "\"address\" is a required parameter for this method.")
+	assertEqual(t, err.Error(), "\"address\" is a required parameter for this method")
 }
 
 // TestCheckRequiredParametersSuccess : Test Check required parameters function's success

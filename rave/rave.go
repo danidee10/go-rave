@@ -69,9 +69,8 @@ func (r rave) ChargeCard(chargeData map[string]interface{}) map[string]interface
 
 // Encrypts and setup a charge (Payment/account) with the secret key and algorithm
 func (r rave) setUpCharge(chargeData map[string]interface{}) map[string]interface{} {
-	key := r.GetKey(r.GetSecretKey())
 	chargeJSON := mapToJSON(chargeData)
-	encryptedchargeData := r.Encrypt3Des(key, string(chargeJSON[:]))
+	encryptedchargeData := r.Encrypt3Des(string(chargeJSON[:]))
 
 	data := map[string]interface{}{
 		"PBFPubKey": r.GetPublicKey(),
@@ -174,7 +173,7 @@ func (r rave) GetFees(data map[string]interface{}) map[string]interface{} {
 
 // Refund : Refund direct charges
 func (r rave) Refund(data map[string]interface{}) map[string]interface{} {
-	data["seckey"] = r.GetSecretKey() 
+	data["seckey"] = r.GetSecretKey()
 	URL := r.getBaseURL() + "/gpx/merchant/transactions/refund"
 
 	response := MakePostRequest(URL, data)
@@ -203,6 +202,9 @@ func NewRave() rave {
 	Rave := rave{}
 	Rave.TestURL = "http://flw-pms-dev.eu-west-1.elasticbeanstalk.com"
 	Rave.LiveURL = "https://api.ravepay.co"
+
+	// default mode is development
+	Rave.Live = false
 
 	return Rave
 }

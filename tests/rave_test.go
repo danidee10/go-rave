@@ -27,10 +27,7 @@ func setUpTest(*testing.M) {
 
 // Test the encryption function
 func TestEncryption(t *testing.T) {
-	seckey := Rave.GetSecretKey()
-	encryptedSecretKey := Rave.GetKey(seckey)
-
-	assertEqual(t, Rave.Encrypt3Des(encryptedSecretKey, "Hello world"), "fus4LnqrvKWXqm7wueoj2Q==")
+	assertEqual(t, Rave.Encrypt3Des("Hello world"), "fus4LnqrvKWXqm7wueoj2Q==")
 }
 
 // It should raise an error if the pin wasn't passed and the suggested_auth is "PIN"

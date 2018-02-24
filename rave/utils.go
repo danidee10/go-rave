@@ -44,7 +44,7 @@ func jsonToInterfaceList(jsonData []byte) []interface{} {
 func checkRequiredParameters(params map[string]interface{}, keys []string) error {
 	for _, key := range keys {
 		if _, ok := params[key]; !ok {
-			return fmt.Errorf("\"%s\" is a required parameter for this method.", key)
+			return fmt.Errorf("\"%s\" is a required parameter for this method", key)
 		}
 	}
 
