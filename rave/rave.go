@@ -1,11 +1,15 @@
 package rave
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"reflect"
+	"sort"
+	"strings"
 )
 
 // Rave : Base Rave type
@@ -195,6 +199,40 @@ func (r rave) ListBanks() []interface{} {
 	returnData := jsonToInterfaceList(body)
 
 	return returnData
+}
+
+// CalculateIntegrityCheckSum : Calculates the integrity checksum of the data required by the browser
+func (r rave) CalculateIntegrityCheckSum(data map[string]interface{}) string {
+	// sort the map
+	sortedKeys := []string{}
+	sortedValues := []string{}
+
+	for key := range data {
+		sortedKeys = append(sortedKeys, key)
+	}
+	sort.Strings(sortedKeys)
+
+	for _, key := range sortedKeys {
+		value := data[key]
+		// convert all values to strings before appending
+		sortedValues = append(sortedValues, fmt.Sprint(value))
+	}
+
+	// convert sortedValues to string slice so we can join
+	for key, value := range sortedValues {
+		sortedValues[key] = value
+	}
+
+	// concatenate the sorted values
+	sha256Payload := strings.Join(sortedValues[:], "")
+
+	// join with secret key
+	sha256Payload += r.GetSecretKey()
+
+	// Generate a sha256 hash and convert the bytes to hex
+	integrityCheckSum := fmt.Sprintf("%x", sha256.Sum256([]byte(sha256Payload)))
+
+	return integrityCheckSum
 }
 
 // NewRave : Constructor for rave struct

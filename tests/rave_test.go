@@ -5,6 +5,8 @@ package tests
 import (
 	"fmt"
 	"go-rave/rave"
+	"log"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -170,4 +172,41 @@ func TestGetFees(t *testing.T) {
 	ret := Rave.GetFees(data)
 
 	fmt.Println(ret)
+}
+
+// Test if the CalculateIntegrityCheckSum function returns valid results
+func TestCalculateIntegrityCheckSum(t *testing.T) {
+	data := map[string]interface{}{
+		"PBFPubKey":          "FLWPUBK-e634d14d9ded04eaf05d5b63a0a06d2f-X",
+		"amount":             20,
+		"payment_method":     "both",
+		"custom_description": "Pay Internet",
+		"custom_logo":        "http://localhost/payporte-3/skin/frontend/ultimo/shoppy/custom/images/logo.svg",
+		"custom_title":       "Shoppy Global systems",
+		"country":            "NG",
+		"currency":           "NGN",
+		"customer_email":     "user@example.com",
+		"customer_firstname": "Temi",
+		"customer_lastname":  "Adelewa",
+		"customer_phone":     "234099940409",
+		"txref":              "MG-1500041286295",
+	}
+
+	// set Rave seckey environment variable so it matches the expected result
+	oldSecKey, found := os.LookupEnv("RAVE_SECKEY")
+	if !found {
+		log.Fatal("You must set the \"RAVE_SECKEY\" environment variable")
+	}
+
+	err := os.Setenv("RAVE_SECKEY", "FLWSECK-bb971402072265fb156e90a3578fe5e6-X")
+	if err != nil {
+		panic(err)
+	}
+
+	integrityChecksum := Rave.CalculateIntegrityCheckSum(data)
+
+	assertEqual(t, integrityChecksum, "a14ac4eba0902e8fd6b5fdf542f46d6efc18885a63c3d5f100c26715c7c8d8f4")
+
+	// set "RAVE_SECKEY" to it's old value
+	os.Setenv("RAVE_SECKEY", oldSecKey)
 }

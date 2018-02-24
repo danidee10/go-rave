@@ -92,13 +92,15 @@ response := Rave.ChargeCard(masterCard)
 fmt.Println(response)
 ```
 
-### Getting encrypted data
+### Encrypting data
 
 To encrypt data(card/account) with `3Des` call the `Rave.3D`
 
 ```go
 encryptedData := Rave.Encrypt3Des(data)
 ```
+
+***NOTE: You may not need to call this function if you use the methods provided by the library. The card/account data is automatically encrypted for you in any method that requires it.***
 
 
 ### Charge Validation
