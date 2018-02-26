@@ -9,7 +9,7 @@ before_script:
   - go vet ./...
 
 after_script:
-  - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 language: go
 
@@ -18,4 +18,4 @@ go:
 
 script:
   - go test github.com/danidee10/go-rave/rave -v 2
-  - go test github.com/danidee10/go-rave/tests -v 2 -coverprofile=cover.out
+  - go test github.com/danidee10/go-rave/tests -v 2 -coverprofile c.out
