@@ -8,7 +8,7 @@ It currently supports the following features:
 
 * Account charge (International for US and ZAR).
 
-* Card Charge (Bake in support for 3DSecure/PIN).
+* Card Charge (Baked in support for 3DSecure/PIN).
 
 * Encryption
 
@@ -16,7 +16,7 @@ It currently supports the following features:
 
 * Retry transaction status check flow.
 
-* Preauth -> Capture -> Refund/void.
+* Preauth -> Capture -> Refund/void flow.
 
 * Support for USSD and Mcash (Alternative payment methods).
 
@@ -78,9 +78,9 @@ masterCard := map[string]interface{}{
 }
 ```
 
-Parameters that are required by Rave's API are also checked. If any parameter is missing, `go-rave` will spit out a helpful log message and crash.
+Parameters that are required by Rave's API are also checked. If any parameter is missing, `go-rave` will return an `error`.
 
-All functions also return maps. To make it easier to read responses from the API.
+All functions also return bytes. You can use a library like (jason)[https://github.com/antonholmquist/jason] to read the values returned from the API.
 
 ## Library methods/functions
 
@@ -89,7 +89,11 @@ All functions also return maps. To make it easier to read responses from the API
 ```go
 card := map[string]interface{}{...}
 
-response := Rave.ChargeCard(masterCard)
+response, err := Rave.ChargeCard(masterCard)
+if err != nil {
+    // handle error
+    panic(err)
+}
 fmt.Println(response)
 ```
 
@@ -114,7 +118,10 @@ To validate a charge for a card, call:
 
 ```go
 transaction := map[string]interface{}{...}
-response:= Rave.ValidateCharge(transaction)
+response, err := Rave.ValidateCharge(transaction)
+if err != nil {
+    // handle error
+}
 ```
 
 with the transaction details.
@@ -125,28 +132,53 @@ To validate a charge for an account, call:
 
 ```go
 transaction := map[string]interface{}{...}
-response := Rave.ValidateAccountCharge(transaction)
+response, err := Rave.ValidateAccountCharge(transaction)
+if err != nil {
+    // handle error
+}
 ```
 
 with the transaction details.
 
 ### Transaction Verification
 
-To verify a transaction, call the `VerifyTransaction` method with the transaction details (reference etc).
+This is a very important function, because you have to make sure Rave has charged the user's card/account and received the payment before giving value to a user.
+
+They're two ways of validating Rave transactions and `go-rave` allows you to use both. Each transaction is verified using the steps outlined in the (API documentation)[https://flutterwavedevelopers.readme.io/v1.0/reference#verification]. ***make sure you verify that no error was returned before giving value***
+
+#### Normal Verification
+
+To verify a transaction, call the `VerifyTransaction` method with the transaction details (reference etc) and handle any errors returned from the method.
 
 ```go
-transaction := map[string]interface{}{...}
-response := Rave.VerifyTransaction(transaction)
+transaction := map[string]interface{}{
+    ..., "flw_ref": transactionReference,
+    "currency": currency, "amount": "1000",
+}
+response, err := Rave.VerifyTransaction(transaction)
+if err != nil {
+    // handle error || don't grant value
+}
 ```
 
-### Transaction Verification with Xrequery
+***Note the flw_ref, currency and amount parameters are compulsory for validation.***
+
+#### Transaction Verification with Xrequery
 
 To verify a transaction with `Xrequery`, call the `XrequeryTransactionVerification` method with the transaction details.
 
 ```go
-transaction := map[string]interface{}{...}
-Rave.XrequeryTransactionVerification(transaction)
+transaction := map[string]interface{}{
+    ..., "flw_ref": transactionReference,
+    "currency": currency, "amount": "1000",
+}
+response, err := Rave.XrequeryTransactionVerification(transaction)
+if err != nil {
+    // handle error || don't grant value
+}
 ```
+
+***Note the flw_ref, currency and amount parameters are compulsory for validation.***
 
 #### Refund
 
@@ -186,7 +218,10 @@ This is a simple code snippet showing you how to achieve that
 
 ```go
 card := map[string]interface{}{...}
-response := Rave.PreauthorizeCard(card)
+response, err := Rave.PreauthorizeCard(card)
+if err != nil {
+    // handle error
+}
 ```
 
 ### Preauthorization Capture
@@ -195,7 +230,10 @@ To Capture an amount, call the `Capture` method with valid data (Typically the r
 
 ```go
 transaction := map[string]interface{}{...}
-response := Rave.Capture(transaction)
+response, err := Rave.Capture(transaction)
+if err != nil {
+    // handle error
+}
 ```
 
 ### Transaction Refund or Void
@@ -204,7 +242,10 @@ Finally, To Refund or void a transaction, call the `RefundOrVoid` method with va
 
 ```go
 transaction := map[string]interface{}{...}
-response := Rave.RefundOrVoid(transaction)
+response, err := Rave.RefundOrVoid(transaction)
+if err != nil {
+    // handle error
+}
 ```
 
 ### IntegrityCheckSum

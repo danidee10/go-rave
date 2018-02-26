@@ -8,8 +8,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/antonholmquist/jason"
 )
 
+// MapToJSON : Convert map[string]interface{} to JSON
 func mapToJSON(mapData map[string]interface{}) []byte {
 	jsonBytes, err := json.Marshal(mapData)
 	if err != nil {
@@ -17,27 +20,6 @@ func mapToJSON(mapData map[string]interface{}) []byte {
 	}
 
 	return jsonBytes
-}
-
-func jsonToMap(jsonData []byte) map[string]interface{} {
-	jsonMap := make(map[string]interface{})
-
-	err := json.Unmarshal(jsonData, &jsonMap)
-	if err != nil {
-		panic(err)
-	}
-
-	return jsonMap
-}
-
-func jsonToInterfaceList(jsonData []byte) []interface{} {
-	var returnData []interface{}
-	err := json.Unmarshal(jsonData, &returnData)
-	if err != nil {
-		panic(err)
-	}
-
-	return returnData
 }
 
 // Check if an array of keys is set in map
@@ -52,7 +34,7 @@ func checkRequiredParameters(params map[string]interface{}, keys []string) error
 }
 
 // MakePostRequest : make s post request with the Content-Type set to application/json
-func MakePostRequest(URL string, data map[string]interface{}) map[string]interface{} {
+func MakePostRequest(URL string, data map[string]interface{}) ([]byte, error) {
 	postData := mapToJSON(data)
 	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(postData))
 	req.Header.Set("Content-Type", "application/json")
@@ -64,7 +46,29 @@ func MakePostRequest(URL string, data map[string]interface{}) map[string]interfa
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
 
-	return jsonToMap(body)
+	err = handleAPIErrors(resp, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+// handle errors raised by the API's, this include's non 200 Errors
+// and Errors for missing or invalid parameters
+func handleAPIErrors(response *http.Response, body []byte) error {
+	v, _ := jason.NewObjectFromBytes(body)
+	status, _ := v.GetString("status")
+
+	if status != "success" {
+		errorMessage, _ := v.GetString("message")
+		return fmt.Errorf("%s Status Code: %d", errorMessage, response.StatusCode)
+	}
+
+	return nil
 }

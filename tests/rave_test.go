@@ -3,19 +3,33 @@
 package tests
 
 import (
+	"encoding/json"
 	"fmt"
 	"go-rave/rave"
 	"log"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/antonholmquist/jason"
 )
+
+//=============================================================================
+// Test Setup
 
 var Rave = rave.NewRave()
 
+var masterCard = map[string]interface{}{
+	"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+	"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
+	"expirymonth": "09", "pin": "3310",
+	"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+	"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+}
+
 func assertEqual(t *testing.T, val1 interface{}, val2 interface{}) {
 	if val1 != val2 {
-		t.Fatalf(
+		t.Errorf(
 			"'%s'(%s) is not Equal to '%s'(%s)",
 			val1, reflect.TypeOf(val1), val2, reflect.TypeOf(val2),
 		)
@@ -27,13 +41,16 @@ func setUpTest(*testing.M) {
 	Rave.Live = false
 }
 
+// End test setup
+// ============================================================================
+
 // Test the encryption function
 func TestEncryption(t *testing.T) {
 	assertEqual(t, Rave.Encrypt3Des("Hello world"), "fus4LnqrvKWXqm7wueoj2Q==")
 }
 
 // It should raise an error if the pin wasn't passed and the suggested_auth is "PIN"
-func testSuggestedAuthRaisesError(t *testing.T) {
+func TestSuggestedAuthRaisesError(t *testing.T) {
 	masterCard := map[string]interface{}{
 		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
@@ -41,25 +58,22 @@ func testSuggestedAuthRaisesError(t *testing.T) {
 		"email":       "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 	}
-	ret := Rave.ChargeCard(masterCard)
+	_, err := Rave.ChargeCard(masterCard)
 
-	fmt.Println(ret)
+	assertEqual(t, err.Error(), "\"pin\" is a required parameter for this method")
 }
 
-func testSuggestedAuth(t *testing.T) {
-	masterCard := map[string]interface{}{
-		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
-		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
-		"expirymonth": "09", "pin": "3310",
-		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
-		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
-	}
-	ret := Rave.ChargeCard(masterCard)
+func TestSuggestedAuth(t *testing.T) {
+	response, _ := Rave.ChargeCard(masterCard)
 
-	fmt.Println(ret)
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	authModelUsed, _ := data.GetString("authModelUsed")
+
+	assertEqual(t, authModelUsed, "PIN")
 }
 
-func testMasterCardPaymentWithPin(t *testing.T) {
+func TestMasterCardPaymentWithPin(t *testing.T) {
 	masterCard := map[string]interface{}{
 		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
@@ -67,9 +81,14 @@ func testMasterCardPaymentWithPin(t *testing.T) {
 		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 	}
-	ret := Rave.ChargeCard(masterCard)
 
-	fmt.Println(ret)
+	response, _ := Rave.ChargeCard(masterCard)
+
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	authModelUsed, _ := data.GetString("authModelUsed")
+
+	assertEqual(t, authModelUsed, "PIN")
 }
 
 func testVerveCardPaymentWithPin(t *testing.T) {
@@ -80,29 +99,40 @@ func testVerveCardPaymentWithPin(t *testing.T) {
 		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 	}
-	ret := Rave.ChargeCard(verveCard)
 
-	fmt.Println(ret)
+	response, _ := Rave.ChargeCard(verveCard)
+
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	authModelUsed, _ := data.GetString("authModelUsed")
+
+	assertEqual(t, authModelUsed, "PIN")
+
+	fmt.Println(string(response[:]))
 }
 
-func testVisaPaymentWith3DSecure(t *testing.T) {
+func TestVisaPaymentWith3DSecure(t *testing.T) {
 	visaCard := map[string]interface{}{
 		"name": "hello", "cardno": "4187427415564246", "currency": "NGN",
 		"country": "NG", "cvv": "828", "amount": "300", "expiryyear": "19",
 		"expirymonth": "09", "email": "tester@flutter.co", "IP": "103.238.105.185",
 		"txRef": "MXX-ASC-4578", "device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 	}
-	ret := Rave.ChargeCard(visaCard)
+	response, _ := Rave.ChargeCard(visaCard)
 
-	// authurl should be part of the response
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	authURL, _ := data.GetString("authurl")
 
-	fmt.Println(ret)
+	if authURL == "" {
+		t.Error("authurl not found in the response")
+	}
 }
 
 // Every method (That makes use of the MakePostRequest method)
 // should return a response (as map[string]interface) for any failed request
 // When the API returns an error
-func testErrorResponse(t *testing.T) {
+func TestErrorResponse(t *testing.T) {
 	// Make a request without including the cvv
 	verveCard := map[string]interface{}{
 		"name": "hello", "cardno": "5061020000000000094", "currency": "NGN",
@@ -111,67 +141,151 @@ func testErrorResponse(t *testing.T) {
 		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 	}
-	ret := Rave.ChargeCard(verveCard)
+	_, err := Rave.ChargeCard(verveCard)
 
-	// should return a cvv required error
+	if err == nil {
+		t.Error("'TestErrorResponse' didn't raise an error")
+	}
 
-	fmt.Println(ret)
+	errorString := err.Error()
+	if errorString != "cvv is required Status Code: 400" {
+		t.Errorf("Method didn't raise 'cvv is required error' instead it raised %s", errorString)
+	}
 }
 
 // We should get a list of all Nigerian banks we can charge
-func testListBanks(t *testing.T) {
-	response := Rave.ListBanks()
+func TestListBanks(t *testing.T) {
+	response, _ := Rave.ListBanks()
 
-	fmt.Println(response)
+	var banks []map[string]string
+	json.Unmarshal(response, &banks)
+
+	// Ensure that access bank is in the response
+	accessBank := banks[0]
+	if accessBank["bankname"] != "ACCESS BANK NIGERIA" || accessBank["bankcode"] != "044" {
+		t.Error("Access Bank wasn't listed")
+		fmt.Println(string(response[:]))
+	}
 }
 
 // Test that a charge on a card can be validated using OTP
-func testChargeCard(t *testing.T) {
-	// TODO: make request and get a fresh transaction reference
+func TestChargeCard(t *testing.T) {
+	// Initialize the transaction and get a valid transaction reference
+	masterCard := map[string]interface{}{
+		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
+		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
+		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+	}
+
+	response, _ := Rave.ChargeCard(masterCard)
+
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	transactionReference, _ := data.GetString("flwRef")
+
 	transaction := map[string]interface{}{
-		"transaction_reference": "FLW-MOCK-539111aa99835cbbe028b058d4c9e961",
+		"transaction_reference": transactionReference,
 		"otp": "12345",
 	}
 
-	ret := Rave.ValidateCharge(transaction)
+	response, _ = Rave.ValidateCharge(transaction)
+	v, _ = jason.NewObjectFromBytes(response)
+	successMessage, _ := v.GetString("message")
+	data, _ = v.GetObject("data")
+	tx, _ := data.GetObject("tx")
+	chargedAmount, _ := tx.GetInt64("charged_amount")
 
-	fmt.Println(ret)
+	if successMessage != "Charge Complete" || chargedAmount != 300 {
+		t.Error("Card Charge failed")
+		fmt.Println(successMessage, chargedAmount)
+	}
 }
 
 // Verify the status of a transaction
-func testVerifyTransaction(t *testing.T) {
-	// TODO: make sure we use a valid transaction reference
-	transaction := map[string]interface{}{
-		"flw_ref":   "FLW-MOCK-539111aa99835cbbe028b058d4c9e961",
-		"normalize": "1",
+func TestVerifyTransaction(t *testing.T) {
+	// Initialize the transaction and get a valid transaction reference
+	masterCard := map[string]interface{}{
+		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
+		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
+		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 	}
 
-	ret := Rave.VerifyTransaction(transaction)
+	response, _ := Rave.ChargeCard(masterCard)
 
-	fmt.Println(ret)
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	transactionReference, _ := data.GetString("flwRef")
+	currency, _ := data.GetString("currency")
+
+	// Pay for the transaction
+	transaction := map[string]interface{}{
+		"transaction_reference": transactionReference,
+		"otp": "12345",
+	}
+	response, _ = Rave.ValidateCharge(transaction)
+
+	// Verify the transaction
+	transaction = map[string]interface{}{
+		"flw_ref": transactionReference, "normalize": "1",
+		"currency": currency, "amount": "1000",
+	}
+	response, err := Rave.VerifyTransaction(transaction)
+	if err != nil {
+		t.Error(err.Error())
+	}
 }
 
 // Verify the status of a transaction using XRequery
-func testXrequeryTransactionVerification(t *testing.T) {
-	transaction := map[string]interface{}{
-		"flw_ref": "FLW-MOCK-6f52518a2ecca2b6b090f9593eb390ce",
-		"tx_ref":  "abcdef", "last_attempt": "1", "only_attempt": "1",
+func TestXrequeryTransactionVerification(t *testing.T) {
+	// Initialize the transaction and get a valid transaction reference
+	masterCard := map[string]interface{}{
+		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+		"country": "NG", "cvv": "789", "amount": "5300", "expiryyear": "19",
+		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
+		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "abcdef",
+		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 	}
 
-	ret := Rave.XrequeryTransactionVerification(transaction)
+	response, _ := Rave.ChargeCard(masterCard)
 
-	fmt.Println(ret)
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	transactionReference, _ := data.GetString("flwRef")
+	currency, _ := data.GetString("currency")
+
+	// Pay for the transaction
+	transaction := map[string]interface{}{
+		"transaction_reference": transactionReference,
+		"otp": "12345",
+	}
+	response, _ = Rave.ValidateCharge(transaction)
+
+	// Verify the transaction
+	// flw_ref is needed for verification
+	transaction = map[string]interface{}{
+		"flw_ref": transactionReference, "tx_ref": "abcdef",
+		"last_attempt": "1", "only_attempt": "1",
+		"currency": currency, "amount": "5300",
+	}
+	response, err := Rave.XrequeryTransactionVerification(transaction)
+	if err != nil {
+		t.Error(err.Error())
+	}
 }
 
 // Test Get fees endpoint
-func TestGetFees(t *testing.T) {
+func testGetFees(t *testing.T) {
 	data := map[string]interface{}{
-		"amount": "1052.50", "currency": "NGN",
+		"amount": "5300", "currency": "NGN",
 	}
 
-	ret := Rave.GetFees(data)
+	response, _ := Rave.GetFees(data)
 
-	fmt.Println(ret)
+	fmt.Println(string(response[:]))
 }
 
 // Test if the CalculateIntegrityCheckSum function returns valid results
