@@ -90,7 +90,7 @@ All functions also return bytes. You can use a library like (jason)[https://gith
 ### Payment with card or account
 
 ```go
-card := map[string]interface{}{...}
+card := map[string]interface{}{..., "redirect_url": "http://127.0.0.1"}
 
 response, err := Rave.ChargeCard(masterCard)
 if err != nil {
@@ -99,6 +99,8 @@ if err != nil {
 }
 fmt.Println(response)
 ```
+
+***Since it's not possible to determine the type of card (International or local) and the AuthModel required without consulting Rave's API, the 'redirect_url' parameter is mandatory for this function. You have to specify one so you can get the response back from Rave for an international card. This parameter isn't actually required for local cards.***
 
 ### Encrypting data
 

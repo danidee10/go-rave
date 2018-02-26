@@ -22,9 +22,17 @@ var Rave = rave.NewRave()
 var masterCard = map[string]interface{}{
 	"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
 	"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
-	"expirymonth": "09", "pin": "3310",
-	"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+	"expirymonth": "09", "pin": "3310", "email": "tester@flutter.co",
+	"IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 	"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+	"redirect_url":       "http://127.0.0.1",
+}
+
+var internationalVisaCard = map[string]interface{}{
+	"name": "international", "cardno": "4556052704172643", "currency": "USD",
+	"country": "US", "cvv": "899", "amount": "1000", "expiryyear": "19",
+	"expirymonth": "09", "email": "tester@flutter.co", "txRef": "TXT",
+	"redirect_url": "http://127.0.0.1",
 }
 
 func assertEqual(t *testing.T, val1 interface{}, val2 interface{}) {
@@ -49,21 +57,7 @@ func TestEncryption(t *testing.T) {
 	assertEqual(t, Rave.Encrypt3Des("Hello world"), "fus4LnqrvKWXqm7wueoj2Q==")
 }
 
-// It should raise an error if the pin wasn't passed and the suggested_auth is "PIN"
-func TestSuggestedAuthRaisesError(t *testing.T) {
-	masterCard := map[string]interface{}{
-		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
-		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
-		"expirymonth": "09",
-		"email":       "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
-		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
-	}
-	_, err := Rave.ChargeCard(masterCard)
-
-	assertEqual(t, err.Error(), "\"pin\" is a required parameter for this method")
-}
-
-func TestSuggestedAuth(t *testing.T) {
+func TestSuggestedAuthPin(t *testing.T) {
 	response, _ := Rave.ChargeCard(masterCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
@@ -73,6 +67,40 @@ func TestSuggestedAuth(t *testing.T) {
 	assertEqual(t, authModelUsed, "PIN")
 }
 
+// It should raise an error if the pin wasn't passed and the suggested_auth is "PIN"
+func TestSuggestedAuthPinRaisesError(t *testing.T) {
+	masterCard := map[string]interface{}{
+		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
+		"expirymonth": "09", "email": "tester@flutter.co", "IP": "103.238.105.185",
+		"txRef": "MXX-ASC-4578", "device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url": "http://127.0.0.1",
+	}
+	_, err := Rave.ChargeCard(masterCard)
+
+	assertEqual(t, err.Error(), "\"pin\" is a required parameter for this method")
+}
+
+// Method should return "VBVSECURECODE" or "AVS_VBVSECURECODE" as the suggestedAuth
+func TestSuggestedAuth3DesSecurePayment(t *testing.T) {
+	response, _ := Rave.ChargeCard(internationalVisaCard)
+
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	authModelUsed, _ := data.GetString("authModelUsed")
+
+	if authModelUsed != "AVS_VBVSECURECODE" && authModelUsed != "VBVSECURECODE" {
+		t.Errorf("The authModelUsed is not 'AVS_VBVSECURECODE' or 'VBVSECURECODE', it's %s", authModelUsed)
+	}
+}
+
+func TestSuggestedAuth3DesSecurePaymentRaisesError(t *testing.T) {
+	delete(internationalVisaCard, "redirect_url")
+	_, err := Rave.ChargeCard(internationalVisaCard)
+
+	assertEqual(t, err.Error(), "\"redirect_url\" is a required parameter for this method")
+}
+
 func TestMasterCardPaymentWithPin(t *testing.T) {
 	masterCard := map[string]interface{}{
 		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
@@ -80,6 +108,7 @@ func TestMasterCardPaymentWithPin(t *testing.T) {
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
 		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 
 	response, _ := Rave.ChargeCard(masterCard)
@@ -98,9 +127,13 @@ func testVerveCardPaymentWithPin(t *testing.T) {
 		"expirymonth": "07", "suggested_auth": "pin", "pin": "1111",
 		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 
-	response, _ := Rave.ChargeCard(verveCard)
+	response, err := Rave.ChargeCard(verveCard)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
@@ -117,6 +150,7 @@ func TestVisaPaymentWith3DSecure(t *testing.T) {
 		"country": "NG", "cvv": "828", "amount": "300", "expiryyear": "19",
 		"expirymonth": "09", "email": "tester@flutter.co", "IP": "103.238.105.185",
 		"txRef": "MXX-ASC-4578", "device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url": "http://127.0.0.1",
 	}
 	response, _ := Rave.ChargeCard(visaCard)
 
@@ -140,6 +174,7 @@ func TestErrorResponse(t *testing.T) {
 		"expirymonth": "07", "suggested_auth": "pin", "pin": "1111",
 		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 	_, err := Rave.ChargeCard(verveCard)
 
@@ -177,6 +212,7 @@ func TestChargeCard(t *testing.T) {
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
 		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 
 	response, _ := Rave.ChargeCard(masterCard)
@@ -212,6 +248,7 @@ func TestVerifyTransaction(t *testing.T) {
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
 		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 
 	response, _ := Rave.ChargeCard(masterCard)
@@ -248,6 +285,7 @@ func TestXrequeryTransactionVerification(t *testing.T) {
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
 		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "abcdef",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 
 	response, _ := Rave.ChargeCard(masterCard)

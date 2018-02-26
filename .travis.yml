@@ -21,7 +21,7 @@ before_script:
   - go vet ./...
 
 after_script:
-  - test-reporter after-build -t gocov --exit-code $TRAVIS_TEST_RESULT
+  - test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
 
 script:
   - go test github.com/danidee10/go-rave/rave -v 2

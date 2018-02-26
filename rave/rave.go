@@ -55,6 +55,11 @@ func (r rave) GetSecretKey() string {
 
 // ChargeCard : Sends a Card request and determine the validation flow to be used
 func (r rave) ChargeCard(chargeData map[string]interface{}) ([]byte, error) {
+	err := checkRequiredParameters(chargeData, []string{"redirect_url"})
+	if err != nil {
+		return nil, err
+	}
+
 	postData := r.setUpCharge(chargeData)
 	response, err := r.chargeCard(postData)
 	if err != nil {
