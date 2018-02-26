@@ -147,7 +147,7 @@ with the transaction details.
 
 This is a very important function, because you have to make sure Rave has charged the user's card/account and received the payment before giving value to a user.
 
-They're two ways of validating Rave transactions and `go-rave` allows you to use both. Each transaction is verified using the steps outlined in the (API documentation)[https://flutterwavedevelopers.readme.io/v1.0/reference#verification]. ***make sure you verify that no error was returned before giving value***
+They're two ways of validating Rave transactions and `go-rave` allows you to use both. Each transaction is verified using the steps outlined in the [API documentation](https://flutterwavedevelopers.readme.io/v1.0/reference#verification). ***make sure you verify that no error was returned before giving value***
 
 #### Normal Verification
 
@@ -189,7 +189,10 @@ To Initiate a refund call the `Refund` method with the transaction details.
 
 ```go
 transaction := map[string]interface{}{...}
-response := Rave.Refund(transaction)
+response, err := Rave.Refund(transaction)
+if err != nil {
+    // handle error || don't grant value
+}
 ```
 
 ### List of Banks
@@ -197,7 +200,10 @@ response := Rave.Refund(transaction)
 Simply call `ListBanks`:
 
 ```go
-response := Rave.ListBanks()
+response, err := Rave.ListBanks()
+if err != nil {
+    // handle error || don't grant value
+}
 ```
 
 ### List Fees
@@ -208,7 +214,10 @@ To get the fee for a particular amount call `GetFee` with valid details.
 data := map[string]interface{}{
     "amount": "1052.50", "currency": "NGN",
 }
-response := Rave.GetFees(data)
+response, err := Rave.GetFees(data)
+if err != nil {
+    // handle error || don't grant value
+}
 ```
 
 ### Preauthorize card
