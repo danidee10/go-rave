@@ -1,0 +1,7 @@
+language: go
+go_import_path: $GOPATH/src/github.com/user
+
+go:
+  - "1.9"
+
+script: go test ./...
