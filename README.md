@@ -1,5 +1,8 @@
 # go-rave
 
+[![Maintainability](https://api.codeclimate.com/v1/badges/60d8ae0dc97cbaca5089/maintainability)](https://codeclimate.com/github/danidee10/go-rave/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/60d8ae0dc97cbaca5089/test_coverage)](https://codeclimate.com/github/danidee10/go-rave/test_coverage)
+
 go-rave is a Go library for flutterwave's [rave](http://rave.frontendpwc.com/) payment platform.
 
 It currently supports the following features:
