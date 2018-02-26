@@ -5,13 +5,13 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"go-rave/rave"
 	"log"
 	"os"
 	"reflect"
 	"testing"
 
 	"github.com/antonholmquist/jason"
+	"github.com/danidee10/go-rave/rave"
 )
 
 //=============================================================================
