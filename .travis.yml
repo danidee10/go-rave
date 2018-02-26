@@ -18,5 +18,4 @@ after_script:
   - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
 
 script:
-  - go test github.com/danidee10/go-rave/rave -v 2
-  - go test github.com/danidee10/go-rave/tests -v 2 -coverprofile c.out
+  - go test ./rave -v 2 -coverprofile c.out -parallel 4

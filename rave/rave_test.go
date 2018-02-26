@@ -1,52 +1,29 @@
 // Tests for the rave package
 
-package tests
+package rave
 
 import (
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/antonholmquist/jason"
-	"github.com/danidee10/go-rave/rave"
 )
 
 //=============================================================================
 // Test Setup
 
-var Rave = rave.NewRave()
-
-var masterCard = map[string]interface{}{
-	"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
-	"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
-	"expirymonth": "09", "pin": "3310", "email": "tester@flutter.co",
-	"IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
-	"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
-	"redirect_url":       "http://127.0.0.1",
-}
-
-var internationalVisaCard = map[string]interface{}{
-	"name": "international", "cardno": "4556052704172643", "currency": "USD",
-	"country": "US", "cvv": "899", "amount": "1000", "expiryyear": "19",
-	"expirymonth": "09", "email": "tester@flutter.co", "txRef": "TXT",
-	"redirect_url": "http://127.0.0.1",
-}
-
-func assertEqual(t *testing.T, val1 interface{}, val2 interface{}) {
-	if val1 != val2 {
-		t.Errorf(
-			"'%s'(%s) is not Equal to '%s'(%s)",
-			val1, reflect.TypeOf(val1), val2, reflect.TypeOf(val2),
-		)
-	}
-}
+var Rave rave
 
 // Setup test suite
-func setUpTest(*testing.M) {
+func TestMain(m *testing.M) {
+	Rave = NewRave()
 	Rave.Live = false
+	fmt.Println("Running tests...")
+
+	os.Exit(m.Run())
 }
 
 // End test setup
@@ -54,10 +31,23 @@ func setUpTest(*testing.M) {
 
 // Test the encryption function
 func TestEncryption(t *testing.T) {
+	t.Parallel()
+
 	assertEqual(t, Rave.Encrypt3Des("Hello world"), "fus4LnqrvKWXqm7wueoj2Q==")
 }
 
 func TestSuggestedAuthPin(t *testing.T) {
+	t.Parallel()
+
+	masterCard := map[string]interface{}{
+		"name": "suggestedAuthPin", "cardno": "5438898014560229", "currency": "NGN",
+		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
+		"expirymonth": "09", "pin": "3310", "email": "suggestedAuthPin@flutter.co",
+		"IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
+	}
+
 	response, _ := Rave.ChargeCard(masterCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
@@ -69,10 +59,12 @@ func TestSuggestedAuthPin(t *testing.T) {
 
 // It should raise an error if the pin wasn't passed and the suggested_auth is "PIN"
 func TestSuggestedAuthPinRaisesError(t *testing.T) {
+	t.Parallel()
+
 	masterCard := map[string]interface{}{
-		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+		"name": "suggestedAuth", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
-		"expirymonth": "09", "email": "tester@flutter.co", "IP": "103.238.105.185",
+		"expirymonth": "09", "email": "suggestedAuthr@flutter.co", "IP": "103.238.105.185",
 		"txRef": "MXX-ASC-4578", "device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url": "http://127.0.0.1",
 	}
@@ -83,7 +75,16 @@ func TestSuggestedAuthPinRaisesError(t *testing.T) {
 
 // Method should return "VBVSECURECODE" or "AVS_VBVSECURECODE" as the suggestedAuth
 func TestSuggestedAuth3DesSecurePayment(t *testing.T) {
-	response, _ := Rave.ChargeCard(internationalVisaCard)
+	t.Parallel()
+
+	visaCard := map[string]interface{}{
+		"name": "Suggested3DesSecurePayment", "cardno": "4556052704172643", "currency": "USD",
+		"country": "US", "cvv": "899", "amount": "1000", "expiryyear": "19",
+		"expirymonth": "09", "email": "Suggested3DesSecurePayment@flutter.co", "txRef": "TXT",
+		"redirect_url": "http://127.0.0.1",
+	}
+
+	response, _ := Rave.ChargeCard(visaCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
@@ -94,19 +95,30 @@ func TestSuggestedAuth3DesSecurePayment(t *testing.T) {
 	}
 }
 
+// Should raise an error because of the missing redirect_url parameter
 func TestSuggestedAuth3DesSecurePaymentRaisesError(t *testing.T) {
-	delete(internationalVisaCard, "redirect_url")
-	_, err := Rave.ChargeCard(internationalVisaCard)
+	t.Parallel()
+
+	visaCard := map[string]interface{}{
+		"name": "Suggested3DesSecurePaymentRaisesError", "cardno": "4556052704172643",
+		"currency": "USD", "country": "US", "cvv": "899", "amount": "1000", "expiryyear": "19",
+		"expirymonth": "09", "email": "Suggested3DesSecurePaymentRaisesError@flutter.co",
+		"txRef": "TXT",
+	}
+
+	_, err := Rave.ChargeCard(visaCard)
 
 	assertEqual(t, err.Error(), "\"redirect_url\" is a required parameter for this method")
 }
 
 func TestMasterCardPaymentWithPin(t *testing.T) {
+	t.Parallel()
+
 	masterCard := map[string]interface{}{
-		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+		"name": "paymentWithPin", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
-		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"email": "paymentWithPin@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -121,11 +133,13 @@ func TestMasterCardPaymentWithPin(t *testing.T) {
 }
 
 func testVerveCardPaymentWithPin(t *testing.T) {
+	t.Parallel()
+
 	verveCard := map[string]interface{}{
-		"name": "hello", "cardno": "5061020000000000094", "currency": "NGN",
+		"name": "verve", "cardno": "5061020000000000094", "currency": "NGN",
 		"country": "NG", "cvv": "347", "amount": "300", "expiryyear": "20",
 		"expirymonth": "07", "suggested_auth": "pin", "pin": "1111",
-		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"email": "verve@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -145,10 +159,12 @@ func testVerveCardPaymentWithPin(t *testing.T) {
 }
 
 func TestVisaPaymentWith3DSecure(t *testing.T) {
+	t.Parallel()
+
 	visaCard := map[string]interface{}{
-		"name": "hello", "cardno": "4187427415564246", "currency": "NGN",
+		"name": "visa", "cardno": "4187427415564246", "currency": "NGN",
 		"country": "NG", "cvv": "828", "amount": "300", "expiryyear": "19",
-		"expirymonth": "09", "email": "tester@flutter.co", "IP": "103.238.105.185",
+		"expirymonth": "09", "email": "visa@flutter.co", "IP": "103.238.105.185",
 		"txRef": "MXX-ASC-4578", "device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url": "http://127.0.0.1",
 	}
@@ -167,12 +183,14 @@ func TestVisaPaymentWith3DSecure(t *testing.T) {
 // should return a response (as map[string]interface) for any failed request
 // When the API returns an error
 func TestErrorResponse(t *testing.T) {
+	t.Parallel()
+
 	// Make a request without including the cvv
 	verveCard := map[string]interface{}{
-		"name": "hello", "cardno": "5061020000000000094", "currency": "NGN",
+		"name": "cvvError", "cardno": "5061020000000000094", "currency": "NGN",
 		"country": "NG", "amount": "300", "expiryyear": "20",
 		"expirymonth": "07", "suggested_auth": "pin", "pin": "1111",
-		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"email": "cvvError@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -190,6 +208,8 @@ func TestErrorResponse(t *testing.T) {
 
 // We should get a list of all Nigerian banks we can charge
 func TestListBanks(t *testing.T) {
+	t.Parallel()
+
 	response, _ := Rave.ListBanks()
 
 	var banks []map[string]string
@@ -205,12 +225,14 @@ func TestListBanks(t *testing.T) {
 
 // Test that a charge on a card can be validated using OTP
 func TestChargeCard(t *testing.T) {
+	t.Parallel()
+
 	// Initialize the transaction and get a valid transaction reference
 	masterCard := map[string]interface{}{
-		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+		"name": "chargeCard", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
-		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"email": "chargeCard@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -241,12 +263,14 @@ func TestChargeCard(t *testing.T) {
 
 // Verify the status of a transaction
 func TestVerifyTransaction(t *testing.T) {
+	t.Parallel()
+
 	// Initialize the transaction and get a valid transaction reference
 	masterCard := map[string]interface{}{
-		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+		"name": "verifyTransaction", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
-		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"email": "verifyTransaction@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -280,11 +304,11 @@ func TestVerifyTransaction(t *testing.T) {
 func TestXrequeryTransactionVerification(t *testing.T) {
 	// Initialize the transaction and get a valid transaction reference
 	masterCard := map[string]interface{}{
-		"name": "hello", "cardno": "5438898014560229", "currency": "NGN",
+		"name": "xrequery", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "5300", "expiryyear": "19",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
-		"email": "tester@flutter.co", "IP": "103.238.105.185", "txRef": "abcdef",
-		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"email": "xrequery@flutter.co", "IP": "103.238.105.111", "txRef": "abcdef",
+		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe031234e",
 		"redirect_url":       "http://127.0.0.1",
 	}
 
@@ -317,6 +341,8 @@ func TestXrequeryTransactionVerification(t *testing.T) {
 
 // Test Get fees endpoint
 func testGetFees(t *testing.T) {
+	t.Parallel()
+
 	data := map[string]interface{}{
 		"amount": "5300", "currency": "NGN",
 	}
@@ -328,6 +354,8 @@ func testGetFees(t *testing.T) {
 
 // Test if the CalculateIntegrityCheckSum function returns valid results
 func TestCalculateIntegrityCheckSum(t *testing.T) {
+	t.Parallel()
+
 	data := map[string]interface{}{
 		"PBFPubKey":          "FLWPUBK-e634d14d9ded04eaf05d5b63a0a06d2f-X",
 		"amount":             20,

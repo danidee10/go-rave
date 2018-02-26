@@ -18,6 +18,8 @@ func assertEqual(t *testing.T, val1 interface{}, val2 interface{}) {
 
 // TestCheckRequiredParametersFail : Test Check required parameters function's failure
 func TestCheckRequiredParametersFail(t *testing.T) {
+	t.Parallel()
+
 	params := map[string]interface{}{"first_name": "fred", "last_name": "quimby"}
 
 	err := checkRequiredParameters(params, []string{"address"})
@@ -27,6 +29,8 @@ func TestCheckRequiredParametersFail(t *testing.T) {
 
 // TestCheckRequiredParametersSuccess : Test Check required parameters function's success
 func TestCheckRequiredParametersSuccess(t *testing.T) {
+	t.Parallel()
+
 	params := map[string]interface{}{"first_name": "fred", "last_name": "quimby"}
 
 	err := checkRequiredParameters(params, []string{"first_name", "last_name"})
