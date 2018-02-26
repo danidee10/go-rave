@@ -7,21 +7,15 @@ env:
   global:
     - CC_TEST_REPORTER_ID=eb2b2a3e52ab654ab2d807c78afa65a5c3b435b782f2f02cd3a4edaf8ff14475
 
-install:
-  - go get -v github.com/golang/dep/cmd/dep
-  - go get -v github.com/codeclimate/test-reporter
-  - go get -v github.com/antonholmquist/jason
-  - cd $GOPATH/src/github.com/golang/dep/cmd/dep && git checkout tags/v0.4.1 && go install
-  - cd $GOPATH/src/github.com/codeclimate/test-reporter && git checkout tags/v0.4.3 && go install
-  - cd $GOPATH/src/github.com/antonholmquist/jason && go install
-  - cd - && dep ensure -v -vendor-only
-
 before_script:
-  - test-reporter before-build
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
   - go vet ./...
+  
 
 after_script:
-  - test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
+  - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
 
 script:
   - go test github.com/danidee10/go-rave/rave -v 2
