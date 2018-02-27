@@ -56,7 +56,7 @@ import (
 
 ## Before you dive in!
 
-go-rave was built with **version 2.0** of Rave's API in mind. If you need to Reference the docs for any information make sure you're looking at https://flutterwavedevelopers.readme.io/v2.0/reference#introduction
+go-rave was built with **version 2.0** of Rave's API in mind. If you need to check the documentation for any information, make sure you're looking at https://flutterwavedevelopers.readme.io/v2.0/reference#introduction
 
 ## Usage
 
@@ -130,6 +130,7 @@ Charge validation is handled by two methods.
 #### Card
 
 **Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#validate-card-charge-1
+
 **Required parameters:** `transaction_reference`, `otp`
 
 To validate a charge for a card, call:
@@ -147,6 +148,7 @@ with the transaction details.
 #### Account
 
 **Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#validate-account-charge-1
+
 **Required parameters:** `transactionreference`, `otp`
 
 To validate a charge for an Account, call:
@@ -172,6 +174,7 @@ They're two ways of validating Rave transactions and `go-rave` allows you to use
 #### Normal Verification
 
 **Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#transaction-status-check
+
 **Required parameters:** `flw_ref` (Transaction reference), `currency`, `amount`
 
 To verify a transaction, call the `VerifyTransaction` method with the transaction details (reference etc) and handle any errors returned from the method.
@@ -190,6 +193,7 @@ if err != nil {
 #### Transaction Verification with Xrequery
 
 **Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#xrequery-transaction-verification
+
 **Required parameters:** `flw_ref` (Transaction reference), `currency`, `amount`
 
 To verify a transaction with `Xrequery`, call the `XrequeryTransactionVerification` method with the transaction details.
@@ -208,6 +212,7 @@ if err != nil {
 #### Refund
 
 **Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#refund
+
 **Required parameters:** `ref` (Transaction reference)
 
 To Initiate a refund call the `Refund` method with the transaction details.
@@ -236,6 +241,7 @@ if err != nil {
 ### Get Fees
 
 **Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#get-fees
+
 **Required parameters:** `amount`, `currency`
 
 To get the fee for a particular amount call `GetFee` with valid details.

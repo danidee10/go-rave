@@ -15,12 +15,12 @@ import (
 //=============================================================================
 // Test Setup
 
-var Rave rave
+var rave Rave
 
 // Setup test suite
 func TestMain(m *testing.M) {
-	Rave = NewRave()
-	Rave.Live = false
+	rave = NewRave()
+	rave.Live = false
 	fmt.Println("Running tests...")
 
 	os.Exit(m.Run())
@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 func TestEncryption(t *testing.T) {
 	t.Parallel()
 
-	assertEqual(t, Rave.Encrypt3Des("Hello world"), "fus4LnqrvKWXqm7wueoj2Q==")
+	assertEqual(t, rave.Encrypt3Des("Hello world"), "fus4LnqrvKWXqm7wueoj2Q==")
 }
 
 func TestSuggestedAuthPin(t *testing.T) {
@@ -48,7 +48,7 @@ func TestSuggestedAuthPin(t *testing.T) {
 		"redirect_url":       "http://127.0.0.1",
 	}
 
-	response, _ := Rave.ChargeCard(masterCard)
+	response, _ := rave.ChargeCard(masterCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
@@ -68,7 +68,7 @@ func TestSuggestedAuthPinRaisesError(t *testing.T) {
 		"txRef": "MXX-ASC-4578", "device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url": "http://127.0.0.1",
 	}
-	_, err := Rave.ChargeCard(masterCard)
+	_, err := rave.ChargeCard(masterCard)
 
 	assertEqual(t, err.Error(), "\"pin\" is a required parameter for this method")
 }
@@ -84,7 +84,7 @@ func TestSuggestedAuth3DesSecurePayment(t *testing.T) {
 		"redirect_url": "http://127.0.0.1",
 	}
 
-	response, _ := Rave.ChargeCard(visaCard)
+	response, _ := rave.ChargeCard(visaCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
@@ -106,7 +106,7 @@ func TestSuggestedAuth3DesSecurePaymentRaisesError(t *testing.T) {
 		"txRef": "TXT",
 	}
 
-	_, err := Rave.ChargeCard(visaCard)
+	_, err := rave.ChargeCard(visaCard)
 
 	assertEqual(t, err.Error(), "\"redirect_url\" is a required parameter for this method")
 }
@@ -123,7 +123,7 @@ func TestMasterCardPaymentWithPin(t *testing.T) {
 		"redirect_url":       "http://127.0.0.1",
 	}
 
-	response, _ := Rave.ChargeCard(masterCard)
+	response, _ := rave.ChargeCard(masterCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
@@ -144,7 +144,7 @@ func testVerveCardPaymentWithPin(t *testing.T) {
 		"redirect_url":       "http://127.0.0.1",
 	}
 
-	response, err := Rave.ChargeCard(verveCard)
+	response, err := rave.ChargeCard(verveCard)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -168,7 +168,7 @@ func TestVisaPaymentWith3DSecure(t *testing.T) {
 		"txRef": "MXX-ASC-4578", "device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url": "http://127.0.0.1",
 	}
-	response, _ := Rave.ChargeCard(visaCard)
+	response, _ := rave.ChargeCard(visaCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
@@ -194,7 +194,7 @@ func TestErrorResponse(t *testing.T) {
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
-	_, err := Rave.ChargeCard(verveCard)
+	_, err := rave.ChargeCard(verveCard)
 
 	if err == nil {
 		t.Error("'TestErrorResponse' didn't raise an error")
@@ -210,7 +210,7 @@ func TestErrorResponse(t *testing.T) {
 func TestListBanks(t *testing.T) {
 	t.Parallel()
 
-	response, _ := Rave.ListBanks()
+	response, _ := rave.ListBanks()
 
 	var banks []map[string]string
 	json.Unmarshal(response, &banks)
@@ -237,7 +237,7 @@ func TestChargeCard(t *testing.T) {
 		"redirect_url":       "http://127.0.0.1",
 	}
 
-	response, _ := Rave.ChargeCard(masterCard)
+	response, _ := rave.ChargeCard(masterCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
@@ -248,7 +248,7 @@ func TestChargeCard(t *testing.T) {
 		"otp": "12345",
 	}
 
-	response, _ = Rave.ValidateCharge(transaction)
+	response, _ = rave.ValidateCharge(transaction)
 	v, _ = jason.NewObjectFromBytes(response)
 	successMessage, _ := v.GetString("message")
 	data, _ = v.GetObject("data")
@@ -275,7 +275,7 @@ func TestVerifyTransaction(t *testing.T) {
 		"redirect_url":       "http://127.0.0.1",
 	}
 
-	response, _ := Rave.ChargeCard(masterCard)
+	response, _ := rave.ChargeCard(masterCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
@@ -287,14 +287,14 @@ func TestVerifyTransaction(t *testing.T) {
 		"transaction_reference": transactionReference,
 		"otp": "12345",
 	}
-	response, _ = Rave.ValidateCharge(transaction)
+	response, _ = rave.ValidateCharge(transaction)
 
 	// Verify the transaction
 	transaction = map[string]interface{}{
 		"flw_ref": transactionReference, "normalize": "1",
 		"currency": currency, "amount": "1000",
 	}
-	response, err := Rave.VerifyTransaction(transaction)
+	response, err := rave.VerifyTransaction(transaction)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -312,7 +312,7 @@ func TestXrequeryTransactionVerification(t *testing.T) {
 		"redirect_url":       "http://127.0.0.1",
 	}
 
-	response, _ := Rave.ChargeCard(masterCard)
+	response, _ := rave.ChargeCard(masterCard)
 
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
@@ -324,7 +324,7 @@ func TestXrequeryTransactionVerification(t *testing.T) {
 		"transaction_reference": transactionReference,
 		"otp": "12345",
 	}
-	response, _ = Rave.ValidateCharge(transaction)
+	response, _ = rave.ValidateCharge(transaction)
 
 	// Verify the transaction
 	// flw_ref is needed for verification
@@ -333,7 +333,7 @@ func TestXrequeryTransactionVerification(t *testing.T) {
 		"last_attempt": "1", "only_attempt": "1",
 		"currency": currency, "amount": "5300",
 	}
-	response, err := Rave.XrequeryTransactionVerification(transaction)
+	response, err := rave.XrequeryTransactionVerification(transaction)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -347,7 +347,7 @@ func testGetFees(t *testing.T) {
 		"amount": "5300", "currency": "NGN",
 	}
 
-	response, _ := Rave.GetFees(data)
+	response, _ := rave.GetFees(data)
 
 	fmt.Println(string(response[:]))
 }
@@ -383,7 +383,7 @@ func TestCalculateIntegrityCheckSum(t *testing.T) {
 		panic(err)
 	}
 
-	integrityChecksum := Rave.CalculateIntegrityCheckSum(data)
+	integrityChecksum := rave.CalculateIntegrityCheckSum(data)
 
 	assertEqual(t, integrityChecksum, "a14ac4eba0902e8fd6b5fdf542f46d6efc18885a63c3d5f100c26715c7c8d8f4")
 
