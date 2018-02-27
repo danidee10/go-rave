@@ -12,7 +12,7 @@ import (
 )
 
 // getKey : Get a key for encryption
-func (r rave) getKey(seckey string) string {
+func (r Rave) getKey(seckey string) string {
 	hashedSeckey := md5.Sum([]byte(seckey))
 	hashedSeckeyLast12 := hashedSeckey[len(hashedSeckey)-6:] // -6 because it's a hex byte array not a string
 	seckeyAdjusted := strings.Replace(seckey, "FLWSECK-", "", 1)
@@ -21,8 +21,8 @@ func (r rave) getKey(seckey string) string {
 	return seckeyAdjustedFirst12 + hex.EncodeToString(hashedSeckeyLast12[:])
 }
 
-// PKCS5Padding : Implements PKCS5 padding
-func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
+// pkcs5Padding : Implements PKCS5 padding
+func pkcs5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
@@ -31,7 +31,7 @@ func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 // Encrypt3Des : Encrypts the data using 3Des encryption
 // Go doesn't include ECB encryption in the standard library for security reasons
 // reference: https://gist.github.com/cuixin/10612934
-func (r rave) Encrypt3Des(payload string) string {
+func (r Rave) Encrypt3Des(payload string) string {
 	seckey := r.GetSecretKey()
 	encryptedSecretKey := r.getKey(seckey)
 
@@ -39,14 +39,14 @@ func (r rave) Encrypt3Des(payload string) string {
 }
 
 // contains the logic for encryption with 3Des
-func (r rave) encrypt3Des(key string, payload string) string {
+func (r Rave) encrypt3Des(key string, payload string) string {
 	block, err := des.NewTripleDESCipher([]byte(key))
 	if err != nil {
 		panic(err)
 	}
 
 	bs := block.BlockSize() // block size is 8 by default
-	payloadBytes := PKCS5Padding([]byte(payload), bs)
+	payloadBytes := pkcs5Padding([]byte(payload), bs)
 
 	if len(payloadBytes)%bs != 0 {
 		panic("Need a multiple of the blocksize")

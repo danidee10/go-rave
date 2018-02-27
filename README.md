@@ -104,7 +104,7 @@ fmt.Println(response)
 
 ### Encrypting data
 
-To encrypt data(card/account) with `3Des` call the `Rave.3D`
+To encrypt data(card/account) with `3Des` call the `Rave.Encrypt3Des` method.
 
 ```go
 encryptedData := Rave.Encrypt3Des(data)
