@@ -119,6 +119,10 @@ func (r Rave) chargeCard(data map[string]interface{}) ([]byte, error) {
 
 // ValidateCharge : Validate a card charge using OTP
 func (r Rave) ValidateCharge(data map[string]interface{}) ([]byte, error) {
+	err := checkRequiredParameters(data, []string{"transaction_reference", "otp"})
+	if err != nil {
+		return nil, err
+	}
 
 	data["PBFPubKey"] = r.GetPublicKey()
 	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/validatecharge"
@@ -133,6 +137,10 @@ func (r Rave) ValidateCharge(data map[string]interface{}) ([]byte, error) {
 
 // ValidateAccountCharge : Validate an account charge using OTP
 func (r Rave) ValidateAccountCharge(data map[string]interface{}) ([]byte, error) {
+	err := checkRequiredParameters(data, []string{"transactionreference", "otp"})
+	if err != nil {
+		return nil, err
+	}
 
 	data["PBFPubKey"] = r.GetPublicKey()
 	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/validate"
@@ -292,6 +300,8 @@ func (r Rave) RefundOrVoid(data map[string]interface{}) ([]byte, error) {
 
 // GetFees : Get fees to be charged for a particular amount/currency
 func (r Rave) GetFees(data map[string]interface{}) ([]byte, error) {
+	err := checkRequiredParameters(data, []string{"amount", "currency"})
+
 	data["PBFPubKey"] = r.GetPublicKey()
 	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/fee"
 

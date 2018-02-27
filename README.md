@@ -54,6 +54,10 @@ import (
 )
 ```
 
+## Before you dive in!
+
+go-rave was built with **version 2.0** of Rave's API in mind. If you need to Reference the docs for any information make sure you're looking at https://flutterwavedevelopers.readme.io/v2.0/reference#introduction
+
 ## Usage
 
 All the functionality provided by the library is contained in the `Rave` `struct` to initialize a new instance of the `struct` call:
@@ -83,11 +87,13 @@ masterCard := map[string]interface{}{
 
 Parameters that are required by Rave's API are also checked. If any parameter is missing, `go-rave` will return an `error`.
 
-All functions also return bytes. You can use a library like (jason)[https://github.com/antonholmquist/jason] to read the values returned from the API.
+All functions also return bytes. You can use a library like [jason](https://github.com/antonholmquist/jason) to read the values returned from the API.
 
 ## Library methods/functions
 
 ### Payment with card or account
+
+**Documentation:** https://flutterwavedevelopers.readme.io/v1.0/reference#rave-direct-charge
 
 ```go
 card := map[string]interface{}{..., "redirect_url": "http://127.0.0.1"}
@@ -104,6 +110,8 @@ fmt.Println(response)
 
 ### Encrypting data
 
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#rave-encryption
+
 To encrypt data(card/account) with `3Des` call the `Rave.Encrypt3Des` method.
 
 ```go
@@ -115,14 +123,19 @@ encryptedData := Rave.Encrypt3Des(data)
 
 ### Charge Validation
 
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#rave-validation
+
 Charge validation is handled by two methods.
 
 #### Card
 
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#validate-card-charge-1
+**Required parameters:** `transaction_reference`, `otp`
+
 To validate a charge for a card, call:
 
 ```go
-transaction := map[string]interface{}{...}
+transaction := map[string]interface{}{"transaction_reference": "...", "otp": "12345"}
 response, err := Rave.ValidateCharge(transaction)
 if err != nil {
     // handle error
@@ -133,10 +146,13 @@ with the transaction details.
 
 #### Account
 
-To validate a charge for an account, call:
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#validate-account-charge-1
+**Required parameters:** `transactionreference`, `otp`
+
+To validate a charge for an Account, call:
 
 ```go
-transaction := map[string]interface{}{...}
+transaction := map[string]interface{}{"transactionreference": "...", "otp": "12345"}
 response, err := Rave.ValidateAccountCharge(transaction)
 if err != nil {
     // handle error
@@ -147,11 +163,16 @@ with the transaction details.
 
 ### Transaction Verification
 
+**Documentation:** https://flutterwavedevelopers.readme.io/v1.0/reference#verification
+
 This is a very important function, because you have to make sure Rave has charged the user's card/account and received the payment before giving value to a user.
 
 They're two ways of validating Rave transactions and `go-rave` allows you to use both. Each transaction is verified using the steps outlined in the [API documentation](https://flutterwavedevelopers.readme.io/v1.0/reference#verification). ***make sure you verify that no error was returned before giving value***
 
 #### Normal Verification
+
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#transaction-status-check
+**Required parameters:** `flw_ref` (Transaction reference), `currency`, `amount`
 
 To verify a transaction, call the `VerifyTransaction` method with the transaction details (reference etc) and handle any errors returned from the method.
 
@@ -166,9 +187,10 @@ if err != nil {
 }
 ```
 
-***Note the flw_ref, currency and amount parameters are compulsory for validation.***
-
 #### Transaction Verification with Xrequery
+
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#xrequery-transaction-verification
+**Required parameters:** `flw_ref` (Transaction reference), `currency`, `amount`
 
 To verify a transaction with `Xrequery`, call the `XrequeryTransactionVerification` method with the transaction details.
 
@@ -183,32 +205,38 @@ if err != nil {
 }
 ```
 
-***Note the flw_ref, currency and amount parameters are compulsory for validation.***
-
 #### Refund
+
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#refund
+**Required parameters:** `ref` (Transaction reference)
 
 To Initiate a refund call the `Refund` method with the transaction details.
 
 ```go
-transaction := map[string]interface{}{...}
+transaction := map[string]interface{}{"ref": "..."}
 response, err := Rave.Refund(transaction)
 if err != nil {
-    // handle error || don't grant value
+    // handle error
 }
 ```
 
 ### List of Banks
+
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#list-of-banks
 
 Simply call `ListBanks`:
 
 ```go
 response, err := Rave.ListBanks()
 if err != nil {
-    // handle error || don't grant value
+    // handle error
 }
 ```
 
-### List Fees
+### Get Fees
+
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#get-fees
+**Required parameters:** `amount`, `currency`
 
 To get the fee for a particular amount call `GetFee` with valid details.
 
@@ -218,15 +246,17 @@ data := map[string]interface{}{
 }
 response, err := Rave.GetFees(data)
 if err != nil {
-    // handle error || don't grant value
+    // handle error
 }
 ```
 
 ### Preauthorize card
 
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#preauthorise-card
+
 To Preauthorize a card, call the `PreAuthorizeCard` method.
 
-***NOTE: The client data is encrypted for you automatically and `charge_type` is also set to `pre_auth` for you.***
+***NOTE: The client data is encrypted automatically and `charge_type` is also set to `pre_auth` for you.***
 
 This is a simple code snippet showing you how to achieve that
 
@@ -240,6 +270,8 @@ if err != nil {
 
 ### Preauthorization Capture
 
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#capture
+
 To Capture an amount, call the `Capture` method with valid data (Typically the response gotten from `Rave.PreauthorizeCard`)
 
 ```go
@@ -251,6 +283,8 @@ if err != nil {
 ```
 
 ### Transaction Refund or Void
+
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#refund-or-void
 
 Finally, To Refund or void a transaction, call the `RefundOrVoid` method with valid transaction data (containing the `reference`)
 
