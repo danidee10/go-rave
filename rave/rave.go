@@ -56,7 +56,10 @@ func (r Rave) GetSecretKey() string {
 
 // ChargeCard : Sends a Card request and determine the validation flow to be used
 func (r Rave) ChargeCard(chargeData map[string]interface{}) ([]byte, error) {
-	err := checkRequiredParameters(chargeData, []string{"redirect_url"})
+	err := checkRequiredParameters(chargeData, []string{
+		"cardno", "cvv", "expirymonth", "expiryyear", "amount", "email", "phonenumber",
+		"firstname", "lastname", "IP", "txRef", "redirect_url",
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -309,8 +312,8 @@ func (r Rave) Capture(data map[string]interface{}) ([]byte, error) {
 	return response, nil
 }
 
-// RefundOrVoid : Refund or void a captured amount
-func (r Rave) RefundOrVoid(data map[string]interface{}) ([]byte, error) {
+// RefundOrVoidPreauth : Refund or void a captured amount
+func (r Rave) RefundOrVoidPreauth(data map[string]interface{}) ([]byte, error) {
 	err := checkRequiredParameters(data, []string{"ref", "action"})
 
 	data["SECKEY"] = r.GetSecretKey()
@@ -339,8 +342,8 @@ func (r Rave) GetFees(data map[string]interface{}) ([]byte, error) {
 	return response, nil
 }
 
-// Refund : Refund direct charges
-func (r Rave) Refund(data map[string]interface{}) ([]byte, error) {
+// RefundTransaction : Refund direct charges
+func (r Rave) RefundTransaction(data map[string]interface{}) ([]byte, error) {
 	data["seckey"] = r.GetSecretKey()
 	URL := r.getBaseURL() + "/gpx/merchant/transactions/refund"
 

@@ -92,9 +92,14 @@ All functions also return bytes. You can use a library like [jason](https://gith
 
 ## Library methods/functions
 
-### Payment with card or account
+### Initiate Payment with card or account
 
-**Documentation:** https://flutterwavedevelopers.readme.io/v1.0/reference#rave-direct-charge
+## Card
+
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#rave-direct-charge
+
+**Required parameters:** `cardno`, `cvv`, `expirymonth`, `expiryyear`, `amount`, `email`, `phonenumber`,
+`firstname`, `lastname`, `IP`, `txRef`, `redirect_url`
 
 ```go
 card := map[string]interface{}{..., "redirect_url": "http://127.0.0.1"}
@@ -108,6 +113,44 @@ fmt.Println(response)
 ```
 
 ***Since it's not possible to determine the type of card (International or local) and the AuthModel required without consulting Rave's API, the 'redirect_url' parameter is mandatory for this function. You have to specify one so you can get the response back from Rave for an international card. This parameter isn't actually required for local cards.***
+
+## Account
+
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#rave-direct-charge
+
+**Required parameters:** `accountnumber`, `accountbank` (Numeric bankcode), `email`, `phonenumber`,`firstname`, `lastname`, `IP`, `txRef`, `payment_type`,
+
+To Pay with an Account E.g Access Bank:
+
+* Call the List Banks endpoint with `ListBanks` so you can get the bankcode
+
+* Call the `ChargeAccount` method with valid parameters
+
+```go
+// get access bank details
+response, err := rave.ListBanks()
+if err != nil {
+    // handle error
+}
+
+var banks []map[string]string
+json.Unmarshal(response, &banks)
+
+accessBankCode := banks[0]["bankcode"]  // assuming access bank is the first in the list
+
+accountDetails := map[string]interface{}{
+    "accountnumber": "0690000031", "accountbank": accessBankCode, "currency": "NGN",
+    "country": "NG", "amount": 1000, "email": "example@gmail.com",
+    "phonenumber": "08123456787", "firstname": "Access", "lastname": "AccessBank",
+    "IP": "138.45.223.12", "txRef": "ACB-123", "payment_type": "account",
+    "device_fingerprint": "675754758584e3847573",
+}
+
+response, err = rave.ChargeAccount(accountDetails)
+if err != nil {
+    // handle error
+}
+```
 
 ### Encrypting data
 
@@ -166,11 +209,11 @@ with the transaction details.
 
 ### Transaction Verification
 
-**Documentation:** https://flutterwavedevelopers.readme.io/v1.0/reference#verification
+**Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#verification
 
 This is a very important function, because you have to make sure Rave has charged the user's card/account and received the payment before giving value to a user.
 
-They're two ways of validating Rave transactions and `go-rave` allows you to use both. Each transaction is verified using the steps outlined in the [API documentation](https://flutterwavedevelopers.readme.io/v1.0/reference#verification). ***make sure you verify that no error was returned before giving value***
+They're two ways of validating Rave transactions and `go-rave` allows you to use both. Each transaction is verified using the steps outlined in the [API documentation](https://flutterwavedevelopers.readme.io/v2.0/reference#verification). ***make sure you verify that no error was returned before giving value***
 
 #### Normal Verification
 
@@ -216,11 +259,11 @@ if err != nil {
 
 **Required parameters:** `ref` (Transaction reference)
 
-To Initiate a refund call the `Refund` method with the transaction details.
+To Initiate a refund call the `RefundTransaction` method with the transaction details.
 
 ```go
 transaction := map[string]interface{}{"ref": "..."}
-response, err := Rave.Refund(transaction)
+response, err := Rave.RefundTransaction(transaction)
 if err != nil {
     // handle error
 }
@@ -299,7 +342,7 @@ Finally, To Refund or void a transaction, call the `RefundOrVoid` method with va
 
 ```go
 transaction := map[string]interface{}{...}
-response, err := Rave.RefundOrVoid(transaction)
+response, err := Rave.RefundOrVoidPreauth(transaction)
 if err != nil {
     // handle error
 }

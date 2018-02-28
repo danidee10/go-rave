@@ -284,8 +284,8 @@ func TestErrorResponse(t *testing.T) {
 	}
 
 	errorString := err.Error()
-	if errorString != "cvv is required Status Code: 400" {
-		t.Errorf("Method didn't raise 'cvv is required error' instead it raised %s", errorString)
+	if errorString != "cvv is required. Status Code: 400" {
+		t.Errorf("Method didn't raise 'cvv is required. Status Code: 400' instead it raised %s", errorString)
 	}
 }
 
@@ -363,10 +363,10 @@ func setDefaultKeys() {
 // Test Preauth method
 func TestPreauth(t *testing.T) {
 	preauthMasterCard := map[string]interface{}{
-		"name": "PreauthCaptureRefundOrVoid", "cardno": "5840406187553286", "currency": "NGN",
+		"name": "Preauth", "cardno": "5840406187553286", "currency": "NGN",
 		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
-		"email": "preauth_capture_refund_or_void@flutter.co", "IP": "103.238.105.185",
+		"email": "preauth@flutter.co", "IP": "103.238.105.185",
 		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
 		"redirect_url": "http://127.0.0.1",
 	}
@@ -385,10 +385,10 @@ func TestPreauth(t *testing.T) {
 // Test Preauth => Capture
 func TestPreauthCapture(t *testing.T) {
 	preauthMasterCard := map[string]interface{}{
-		"name": "PreauthCaptureRefundOrVoid", "cardno": "5840406187553286", "currency": "NGN",
+		"name": "PreauthCapture", "cardno": "5840406187553286", "currency": "NGN",
 		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
-		"email": "preauth_capture_refund_or_void@flutter.co", "IP": "103.238.105.185",
+		"email": "preauth_capture@flutter.co", "IP": "103.238.105.185",
 		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
 		"redirect_url": "http://127.0.0.1",
 	}
@@ -414,10 +414,10 @@ func TestPreauthCapture(t *testing.T) {
 // Test Preauth => Capture => Refund
 func TestPreauthCaptureRefund(t *testing.T) {
 	preauthMasterCard := map[string]interface{}{
-		"name": "PreauthCaptureRefundOrVoid", "cardno": "5840406187553286", "currency": "NGN",
+		"name": "PreauthCaptureRefund", "cardno": "5840406187553286", "currency": "NGN",
 		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
-		"email": "preauth_capture_refund_or_void@flutter.co", "IP": "103.238.105.185",
+		"email": "preauth_capture_refund@flutter.co", "IP": "103.238.105.185",
 		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
 		"redirect_url": "http://127.0.0.1",
 	}
@@ -439,7 +439,7 @@ func TestPreauthCaptureRefund(t *testing.T) {
 	transaction := map[string]interface{}{
 		"ref": transactionReference, "action": "void",
 	}
-	response, _ = rave.RefundOrVoid(transaction)
+	response, _ = rave.RefundOrVoidPreauth(transaction)
 
 	v, _ = jason.NewObjectFromBytes(response)
 	successMessage, _ := v.GetString("message")
@@ -451,10 +451,10 @@ func TestPreauthCaptureRefund(t *testing.T) {
 func TestPreauthVoid(t *testing.T) {
 
 	preauthMasterCard := map[string]interface{}{
-		"name": "PreauthCaptureRefundOrVoid", "cardno": "5840406187553286", "currency": "NGN",
+		"name": "PreauthVoid", "cardno": "5840406187553286", "currency": "NGN",
 		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
-		"email": "preauth_capture_refund_or_void@flutter.co", "IP": "103.238.105.185",
+		"email": "preauth_void@flutter.co", "IP": "103.238.105.185",
 		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
 		"redirect_url": "http://127.0.0.1",
 	}
@@ -472,7 +472,7 @@ func TestPreauthVoid(t *testing.T) {
 	transaction := map[string]interface{}{
 		"ref": transactionReference, "action": "void",
 	}
-	response, _ = rave.RefundOrVoid(transaction)
+	response, _ = rave.RefundOrVoidPreauth(transaction)
 
 	v, _ = jason.NewObjectFromBytes(response)
 	successMessage, _ := v.GetString("message")
@@ -559,7 +559,7 @@ func TestXrequeryTransactionVerification(t *testing.T) {
 }
 
 // Test transaction refund
-func TestRefund(t *testing.T) {
+func TestRefundTransaction(t *testing.T) {
 	t.Parallel()
 
 	// Initialize the transaction and get a valid transaction reference
@@ -590,7 +590,7 @@ func TestRefund(t *testing.T) {
 
 	// Refund the transaction
 	transaction = map[string]interface{}{"ref": transactionReference}
-	response, _ = rave.Refund(transaction)
+	response, _ = rave.RefundTransaction(transaction)
 	v, _ = jason.NewObjectFromBytes(response)
 	successMessage, _ := v.GetString("message")
 	data, _ = v.GetObject("data")
