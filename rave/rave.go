@@ -62,7 +62,7 @@ func (r Rave) ChargeCard(chargeData map[string]interface{}) ([]byte, error) {
 	}
 
 	postData := r.setUpCharge(chargeData)
-	response, err := r.chargeCard(postData)
+	response, err := r.charge(postData)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (r Rave) ChargeCard(chargeData map[string]interface{}) ([]byte, error) {
 		}
 
 		postData = r.setUpCharge(chargeData)
-		response, err = r.chargeCard(postData)
+		response, err = r.charge(postData)
 		if err != nil {
 			return nil, err
 		}
@@ -105,8 +105,8 @@ func (r Rave) setUpCharge(chargeData map[string]interface{}) map[string]interfac
 	return data
 }
 
-// ChargeCard: Contains the actual logic for making requests to the charge endpoint
-func (r Rave) chargeCard(data map[string]interface{}) ([]byte, error) {
+// charge: Contains the actual logic for making requests to the charge endpoint
+func (r Rave) charge(data map[string]interface{}) ([]byte, error) {
 	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/charge"
 
 	response, err := MakePostRequest(URL, data)
@@ -128,6 +128,25 @@ func (r Rave) ValidateCharge(data map[string]interface{}) ([]byte, error) {
 	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/validatecharge"
 
 	response, err := MakePostRequest(URL, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+// ChargeAccount : Charge a Local (Nigerian) or South African Bank Account
+func (r Rave) ChargeAccount(data map[string]interface{}) ([]byte, error) {
+	err := checkRequiredParameters(data, []string{
+		"accountnumber", "accountbank", "email", "phonenumber",
+		"firstname", "lastname", "IP", "txRef", "payment_type",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	postData := r.setUpCharge(data)
+	response, err := r.charge(postData)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +280,7 @@ func verifyTransaction(transactionData map[string]interface{}, response []byte) 
 // PreauthorizeCard : This is just a wrapper arond the Charge function that automatically
 // sets "charge_type" to "pre_auth"
 func (r Rave) PreauthorizeCard(chargeData map[string]interface{}) ([]byte, error) {
-	chargeData["charge_type"] = "pre_auth"
+	chargeData["charge_type"] = "preauth"
 
 	response, err := r.ChargeCard(chargeData)
 	if err != nil {
@@ -274,6 +293,11 @@ func (r Rave) PreauthorizeCard(chargeData map[string]interface{}) ([]byte, error
 
 // Capture : Capture a preauthorized transaction
 func (r Rave) Capture(data map[string]interface{}) ([]byte, error) {
+	err := checkRequiredParameters(data, []string{"flwRef"})
+	if err != nil {
+		return nil, err
+	}
+
 	data["SECKEY"] = r.GetSecretKey()
 	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/capture"
 
@@ -287,6 +311,8 @@ func (r Rave) Capture(data map[string]interface{}) ([]byte, error) {
 
 // RefundOrVoid : Refund or void a captured amount
 func (r Rave) RefundOrVoid(data map[string]interface{}) ([]byte, error) {
+	err := checkRequiredParameters(data, []string{"ref", "action"})
+
 	data["SECKEY"] = r.GetSecretKey()
 	URL := r.getBaseURL() + "/flwv3-pug/getpaidx/api/refundorvoid"
 

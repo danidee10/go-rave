@@ -5,7 +5,6 @@ package rave
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"testing"
 
@@ -16,6 +15,9 @@ import (
 // Test Setup
 
 var rave Rave
+
+var DefaultPublicKey = rave.GetPublicKey()
+var DefaultSecretKey = rave.GetSecretKey()
 
 // Setup test suite
 func TestMain(m *testing.M) {
@@ -179,6 +181,87 @@ func TestVisaPaymentWith3DSecure(t *testing.T) {
 	}
 }
 
+// Test AccountCharge
+func TestAccountCharge(t *testing.T) {
+	t.Parallel()
+
+	// get access bank details
+	response, _ := rave.ListBanks()
+
+	var banks []map[string]string
+	json.Unmarshal(response, &banks)
+
+	accessBankCode := banks[0]["bankcode"]
+
+	accountDetails := map[string]interface{}{
+		"accountnumber": "0690000031", "accountbank": accessBankCode, "currency": "NGN",
+		"country": "NG", "amount": 5000, "email": "TestAccessBankCharge@gmail.com",
+		"phonenumber": "08123456787", "firstname": "Access", "lastname": "AccessBank",
+		"IP": "138.45.223.12", "txRef": "ACB-123", "payment_type": "account",
+		"device_fingerprint": "675754758584e3847573",
+	}
+
+	response, _ = rave.ChargeAccount(accountDetails)
+
+	v, _ := jason.NewObjectFromBytes(response)
+	status, _ := v.GetString("status")
+
+	assertEqual(t, status, "success")
+}
+
+// top up wallet
+// The only way to top up Rave wallet while testing, is to do an Access Bank charge
+// without funds in your account, the Refund test will fail
+func topUpAccount() []byte {
+	// get access bank details
+	response, _ := rave.ListBanks()
+
+	var banks []map[string]string
+	json.Unmarshal(response, &banks)
+
+	accessBankCode := banks[0]["bankcode"]
+
+	accountDetails := map[string]interface{}{
+		"accountnumber": "0690000031", "accountbank": accessBankCode, "currency": "NGN",
+		"country": "NG", "amount": 5000, "email": "TestAccessBankCharge@gmail.com",
+		"phonenumber": "08123456787", "firstname": "Access", "lastname": "AccessBank",
+		"IP": "138.45.223.12", "txRef": "ACB-123", "payment_type": "account",
+		"device_fingerprint": "675754758584e3847573",
+	}
+
+	response, _ = rave.ChargeAccount(accountDetails)
+
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	transactionReference, _ := data.GetString("flwRef")
+
+	// validate account charge
+	transaction := map[string]interface{}{
+		"transactionreference": transactionReference,
+		"otp": "12345",
+	}
+	response, _ = rave.ValidateAccountCharge(transaction)
+
+	return response
+}
+
+// Test Validate Account Charge for local banks (Access Bank)
+func TestValidateAccountCharge(t *testing.T) {
+	t.Parallel()
+
+	response := topUpAccount()
+	v, _ := jason.NewObjectFromBytes(response)
+	successMessage, _ := v.GetString("message")
+	data, _ := v.GetObject("data")
+	chargedAmount, _ := data.GetInt64("charged_amount")
+
+	if successMessage != "Charge Complete" || chargedAmount != 5000 {
+		t.Error("Account Charge failed")
+		fmt.Println(successMessage, chargedAmount)
+	}
+
+}
+
 // Every method (That makes use of the MakePostRequest method)
 // should return a response (as map[string]interface) for any failed request
 // When the API returns an error
@@ -261,6 +344,142 @@ func TestChargeCard(t *testing.T) {
 	}
 }
 
+// Use specific Preauth "test" keys
+func setPreauthKeys() {
+	// set Preauth keys for testing
+	if rave.Live == false {
+		os.Setenv("RAVE_PUBLICKEY", "FLWPUBK-8cd258c49f38e05292e5472b2b15906e-X")
+		os.Setenv("RAVE_SECKEY", "FLWSECK-c51891678d48c39eff3701ff686bdb69-X")
+	}
+}
+
+// Set Default auth keys
+func setDefaultKeys() {
+	// replace preauth keys with old keys
+	os.Setenv("RAVE_PUBLICKEY", DefaultPublicKey)
+	os.Setenv("RAVE_SECKEY", DefaultSecretKey)
+}
+
+// Test Preauth method
+func TestPreauth(t *testing.T) {
+	preauthMasterCard := map[string]interface{}{
+		"name": "PreauthCaptureRefundOrVoid", "cardno": "5840406187553286", "currency": "NGN",
+		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
+		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
+		"email": "preauth_capture_refund_or_void@flutter.co", "IP": "103.238.105.185",
+		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
+		"redirect_url": "http://127.0.0.1",
+	}
+
+	setPreauthKeys()
+	defer setDefaultKeys()
+	response, _ := rave.PreauthorizeCard(preauthMasterCard)
+
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	status, _ := data.GetString("status")
+
+	assertEqual(t, status, "pending-capture")
+}
+
+// Test Preauth => Capture
+func TestPreauthCapture(t *testing.T) {
+	preauthMasterCard := map[string]interface{}{
+		"name": "PreauthCaptureRefundOrVoid", "cardno": "5840406187553286", "currency": "NGN",
+		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
+		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
+		"email": "preauth_capture_refund_or_void@flutter.co", "IP": "103.238.105.185",
+		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
+		"redirect_url": "http://127.0.0.1",
+	}
+
+	// Pre authorize transaction
+	setPreauthKeys()
+	defer setDefaultKeys()
+
+	response, _ := rave.PreauthorizeCard(preauthMasterCard)
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	transactionReference, _ := data.GetString("flwRef")
+
+	// Capture the amount
+	response, _ = rave.Capture(map[string]interface{}{"flwRef": transactionReference})
+	v, _ = jason.NewObjectFromBytes(response)
+	successMessage, _ := v.GetString("message")
+
+	assertEqual(t, successMessage, "Capture complete")
+
+}
+
+// Test Preauth => Capture => Refund
+func TestPreauthCaptureRefund(t *testing.T) {
+	preauthMasterCard := map[string]interface{}{
+		"name": "PreauthCaptureRefundOrVoid", "cardno": "5840406187553286", "currency": "NGN",
+		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
+		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
+		"email": "preauth_capture_refund_or_void@flutter.co", "IP": "103.238.105.185",
+		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
+		"redirect_url": "http://127.0.0.1",
+	}
+
+	// Pre authorize transaction
+	setPreauthKeys()
+	defer setDefaultKeys()
+
+	response, _ := rave.PreauthorizeCard(preauthMasterCard)
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	transactionReference, _ := data.GetString("flwRef")
+
+	// Capture the amount
+	response, _ = rave.Capture(map[string]interface{}{"flwRef": transactionReference})
+	v, _ = jason.NewObjectFromBytes(response)
+
+	// Refund the amount
+	transaction := map[string]interface{}{
+		"ref": transactionReference, "action": "void",
+	}
+	response, _ = rave.RefundOrVoid(transaction)
+
+	v, _ = jason.NewObjectFromBytes(response)
+	successMessage, _ := v.GetString("message")
+
+	assertEqual(t, successMessage, "Refund or void complete")
+}
+
+// Test Preauth => Void
+func TestPreauthVoid(t *testing.T) {
+
+	preauthMasterCard := map[string]interface{}{
+		"name": "PreauthCaptureRefundOrVoid", "cardno": "5840406187553286", "currency": "NGN",
+		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
+		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
+		"email": "preauth_capture_refund_or_void@flutter.co", "IP": "103.238.105.185",
+		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
+		"redirect_url": "http://127.0.0.1",
+	}
+
+	// Preauthorize card
+	setPreauthKeys()
+	defer setDefaultKeys()
+
+	response, _ := rave.PreauthorizeCard(preauthMasterCard)
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	transactionReference, _ := data.GetString("flwRef")
+
+	// Void the transaction
+	transaction := map[string]interface{}{
+		"ref": transactionReference, "action": "void",
+	}
+	response, _ = rave.RefundOrVoid(transaction)
+
+	v, _ = jason.NewObjectFromBytes(response)
+	successMessage, _ := v.GetString("message")
+
+	assertEqual(t, successMessage, "Refund or void complete")
+}
+
 // Verify the status of a transaction
 func TestVerifyTransaction(t *testing.T) {
 	t.Parallel()
@@ -294,7 +513,7 @@ func TestVerifyTransaction(t *testing.T) {
 		"flw_ref": transactionReference, "normalize": "1",
 		"currency": currency, "amount": "1000",
 	}
-	response, err := rave.VerifyTransaction(transaction)
+	_, err := rave.VerifyTransaction(transaction)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -333,9 +552,53 @@ func TestXrequeryTransactionVerification(t *testing.T) {
 		"last_attempt": "1", "only_attempt": "1",
 		"currency": currency, "amount": "5300",
 	}
-	response, err := rave.XrequeryTransactionVerification(transaction)
+	_, err := rave.XrequeryTransactionVerification(transaction)
 	if err != nil {
 		t.Error(err.Error())
+	}
+}
+
+// Test transaction refund
+func TestRefund(t *testing.T) {
+	t.Parallel()
+
+	// Initialize the transaction and get a valid transaction reference
+	masterCard := map[string]interface{}{
+		"name": "TestRefund", "cardno": "5438898014560229", "currency": "NGN",
+		"country": "NG", "cvv": "789", "amount": "5300", "expiryyear": "19",
+		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
+		"email": "TestRefund@flutter.co", "IP": "103.238.105.111", "txRef": "1dcdef",
+		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbx031234e",
+		"redirect_url":       "http://127.0.0.1",
+	}
+
+	response, _ := rave.ChargeCard(masterCard)
+
+	v, _ := jason.NewObjectFromBytes(response)
+	data, _ := v.GetObject("data")
+	transactionReference, _ := data.GetString("flwRef")
+
+	// Pay for the transaction
+	transaction := map[string]interface{}{
+		"transaction_reference": transactionReference,
+		"otp": "12345",
+	}
+	response, _ = rave.ValidateCharge(transaction)
+
+	// topup the Rave wallet
+	topUpAccount()
+
+	// Refund the transaction
+	transaction = map[string]interface{}{"ref": transactionReference}
+	response, _ = rave.Refund(transaction)
+	v, _ = jason.NewObjectFromBytes(response)
+	successMessage, _ := v.GetString("message")
+	data, _ = v.GetObject("data")
+	AmountRefunded, _ := data.GetInt64("AmountRefunded")
+
+	if successMessage != "Refunded" || AmountRefunded != 5300 {
+		t.Error("Transaction Refund failed")
+		fmt.Println(successMessage, AmountRefunded)
 	}
 }
 
@@ -373,10 +636,7 @@ func TestCalculateIntegrityCheckSum(t *testing.T) {
 	}
 
 	// set Rave seckey environment variable so it matches the expected result
-	oldSecKey, found := os.LookupEnv("RAVE_SECKEY")
-	if !found {
-		log.Fatal("You must set the \"RAVE_SECKEY\" environment variable")
-	}
+	oldSecKey := rave.GetSecretKey()
 
 	err := os.Setenv("RAVE_SECKEY", "FLWSECK-bb971402072265fb156e90a3578fe5e6-X")
 	if err != nil {

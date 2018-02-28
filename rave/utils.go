@@ -67,7 +67,7 @@ func handleAPIErrors(response *http.Response, body []byte) error {
 
 	if status != "success" {
 		errorMessage, _ := v.GetString("message")
-		return fmt.Errorf("%s Status Code: %d", errorMessage, response.StatusCode)
+		return fmt.Errorf("%s. Status Code: %d", errorMessage, response.StatusCode)
 	}
 
 	return nil

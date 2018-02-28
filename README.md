@@ -2,6 +2,7 @@
 
 [![Maintainability](https://api.codeclimate.com/v1/badges/60d8ae0dc97cbaca5089/maintainability)](https://codeclimate.com/github/danidee10/go-rave/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/60d8ae0dc97cbaca5089/test_coverage)](https://codeclimate.com/github/danidee10/go-rave/test_coverage)
+<img class="badge" tag="github.com/danidee10/go-rave" src="/badge/github.com/danidee10/go-rave">
 
 go-rave is a Go library for flutterwave's [rave](http://rave.frontendpwc.com/) payment platform.
 
@@ -262,7 +263,7 @@ if err != nil {
 
 To Preauthorize a card, call the `PreAuthorizeCard` method.
 
-***NOTE: The client data is encrypted automatically and `charge_type` is also set to `pre_auth` for you.***
+***NOTE: The client data is encrypted automatically and `charge_type` is also set to `preauth` for you.***
 
 This is a simple code snippet showing you how to achieve that
 
@@ -278,10 +279,12 @@ if err != nil {
 
 **Documentation:** https://flutterwavedevelopers.readme.io/v2.0/reference#capture
 
+**Required parameters:** `flwRef` (Transaction refernece).
+
 To Capture an amount, call the `Capture` method with valid data (Typically the response gotten from `Rave.PreauthorizeCard`)
 
 ```go
-transaction := map[string]interface{}{...}
+transaction := map[string]interface{}{"flwRef": "..."}
 response, err := Rave.Capture(transaction)
 if err != nil {
     // handle error
