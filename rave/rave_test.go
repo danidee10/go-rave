@@ -44,8 +44,9 @@ func TestSuggestedAuthPin(t *testing.T) {
 	masterCard := map[string]interface{}{
 		"name": "suggestedAuthPin", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
-		"expirymonth": "09", "pin": "3310", "email": "suggestedAuthPin@flutter.co",
-		"IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"expirymonth": "09", "pin": "3310", "email": "TestSuggestedAuth@flutter.co",
+		"firstname": "suggested", "lastname": "auth", "phonenumber": "081245554343",
+		"IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -66,9 +67,10 @@ func TestSuggestedAuthPinRaisesError(t *testing.T) {
 	masterCard := map[string]interface{}{
 		"name": "suggestedAuth", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
-		"expirymonth": "09", "email": "suggestedAuthr@flutter.co", "IP": "103.238.105.185",
-		"txRef": "MXX-ASC-4578", "device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
-		"redirect_url": "http://127.0.0.1",
+		"expirymonth": "09", "email": "TestSuggestedAuthPinRaisesError@flutter.co",
+		"firstname": "suggested_pin", "lastname": "raises_error", "phonenumber": "081245554343",
+		"IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
+		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c", "redirect_url": "http://127.0.0.1",
 	}
 	_, err := rave.ChargeCard(masterCard)
 
@@ -82,7 +84,9 @@ func TestSuggestedAuth3DesSecurePayment(t *testing.T) {
 	visaCard := map[string]interface{}{
 		"name": "Suggested3DesSecurePayment", "cardno": "4556052704172643", "currency": "USD",
 		"country": "US", "cvv": "899", "amount": "1000", "expiryyear": "19",
-		"expirymonth": "09", "email": "Suggested3DesSecurePayment@flutter.co", "txRef": "TXT",
+		"expirymonth": "09", "email": "TestSuggestedAuth3Des@flutter.co",
+		"firstname": "suggested_auth", "lastname": "3Desauth", "phonenumber": "081245554343",
+		"IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 		"redirect_url": "http://127.0.0.1",
 	}
 
@@ -104,8 +108,9 @@ func TestSuggestedAuth3DesSecurePaymentRaisesError(t *testing.T) {
 	visaCard := map[string]interface{}{
 		"name": "Suggested3DesSecurePaymentRaisesError", "cardno": "4556052704172643",
 		"currency": "USD", "country": "US", "cvv": "899", "amount": "1000", "expiryyear": "19",
-		"expirymonth": "09", "email": "Suggested3DesSecurePaymentRaisesError@flutter.co",
-		"txRef": "TXT",
+		"expirymonth": "09", "email": "TestSuggestedAuth3DesRaisesError@flutter.co",
+		"firstname": "suggested3DesRaisesError", "lastname": "3DesRaisesError",
+		"phonenumber": "081245554343", "IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 	}
 
 	_, err := rave.ChargeCard(visaCard)
@@ -120,7 +125,9 @@ func TestMasterCardPaymentWithPin(t *testing.T) {
 		"name": "paymentWithPin", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
-		"email": "paymentWithPin@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"email": "PaymentWithPin@flutter.co", "firstname": "payment",
+		"lastname": "with_pin", "phonenumber": "081245554343",
+		"IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -141,7 +148,8 @@ func testVerveCardPaymentWithPin(t *testing.T) {
 		"name": "verve", "cardno": "5061020000000000094", "currency": "NGN",
 		"country": "NG", "cvv": "347", "amount": "300", "expiryyear": "20",
 		"expirymonth": "07", "suggested_auth": "pin", "pin": "1111",
-		"email": "verve@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"email": "verve@flutter.co", "firstname": "verve", "lastname": "verve",
+		"phonenumber": "081245554343", "IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -166,9 +174,11 @@ func TestVisaPaymentWith3DSecure(t *testing.T) {
 	visaCard := map[string]interface{}{
 		"name": "visa", "cardno": "4187427415564246", "currency": "NGN",
 		"country": "NG", "cvv": "828", "amount": "300", "expiryyear": "19",
-		"expirymonth": "09", "email": "visa@flutter.co", "IP": "103.238.105.185",
-		"txRef": "MXX-ASC-4578", "device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
-		"redirect_url": "http://127.0.0.1",
+		"expirymonth": "09", "email": "visa@flutter.co",
+		"firstname": "visa", "lastname": "visa", "phonenumber": "081245554343",
+		"IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
+		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 	response, _ := rave.ChargeCard(visaCard)
 
@@ -270,10 +280,11 @@ func TestErrorResponse(t *testing.T) {
 
 	// Make a request without including the cvv
 	verveCard := map[string]interface{}{
-		"name": "cvvError", "cardno": "5061020000000000094", "currency": "NGN",
-		"country": "NG", "amount": "300", "expiryyear": "20",
-		"expirymonth": "07", "suggested_auth": "pin", "pin": "1111",
-		"email": "cvvError@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"name": "TestErrorResponse", "cardno": "5590131743294314", "currency": "NGN",
+		"country": "NG", "amount": "300", "cvv": "887", "expirymonth": "11",
+		"expiryyear": "20", "suggested_auth": "pin", "pin": "3310",
+		"email": "TestErrorResponse@flutter.co", "firstname": "error", "lastname": "response",
+		"phonenumber": "081245554343", "IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -284,8 +295,8 @@ func TestErrorResponse(t *testing.T) {
 	}
 
 	errorString := err.Error()
-	if errorString != "cvv is required. Status Code: 400" {
-		t.Errorf("Method didn't raise 'cvv is required. Status Code: 400' instead it raised %s", errorString)
+	if errorString != "Fraudulent. Transaction. Status Code: 400" {
+		t.Errorf("Method didn't raise 'Fraudulent. Transaction. Status Code: 400' instead it raised %s", errorString)
 	}
 }
 
@@ -315,7 +326,9 @@ func TestChargeCard(t *testing.T) {
 		"name": "chargeCard", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
-		"email": "chargeCard@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"email":     "TestChargeCard@flutter.co",
+		"firstname": "charge", "lastname": "card", "phonenumber": "081245554343",
+		"IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -366,15 +379,17 @@ func TestPreauth(t *testing.T) {
 		"name": "Preauth", "cardno": "5840406187553286", "currency": "NGN",
 		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
-		"email": "preauth@flutter.co", "IP": "103.238.105.185",
-		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
-		"redirect_url": "http://127.0.0.1",
+		"email": "preauth_void@flutter.co", "firstname": "preauth", "lastname": "preauth",
+		"phonenumber": "081245554343", "IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
+		"device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 
 	setPreauthKeys()
 	defer setDefaultKeys()
-	response, _ := rave.PreauthorizeCard(preauthMasterCard)
 
+	// Preauthorize card
+	response, _ := rave.PreauthorizeCard(preauthMasterCard)
 	v, _ := jason.NewObjectFromBytes(response)
 	data, _ := v.GetObject("data")
 	status, _ := data.GetString("status")
@@ -388,9 +403,10 @@ func TestPreauthCapture(t *testing.T) {
 		"name": "PreauthCapture", "cardno": "5840406187553286", "currency": "NGN",
 		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
-		"email": "preauth_capture@flutter.co", "IP": "103.238.105.185",
-		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
-		"redirect_url": "http://127.0.0.1",
+		"email": "preauth_void@flutter.co", "firstname": "preauth", "lastname": "capture",
+		"phonenumber": "081245554343", "IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
+		"device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 
 	// Pre authorize transaction
@@ -417,9 +433,10 @@ func TestPreauthCaptureRefund(t *testing.T) {
 		"name": "PreauthCaptureRefund", "cardno": "5840406187553286", "currency": "NGN",
 		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
-		"email": "preauth_capture_refund@flutter.co", "IP": "103.238.105.185",
-		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
-		"redirect_url": "http://127.0.0.1",
+		"email": "preauth_void@flutter.co", "firstname": "preauth", "lastname": "capture_refund",
+		"phonenumber": "081245554343", "IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
+		"device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 
 	// Pre authorize transaction
@@ -454,9 +471,10 @@ func TestPreauthVoid(t *testing.T) {
 		"name": "PreauthVoid", "cardno": "5840406187553286", "currency": "NGN",
 		"country": "NG", "cvv": "116", "amount": "300", "expiryyear": "18",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "1111",
-		"email": "preauth_void@flutter.co", "IP": "103.238.105.185",
-		"txRef": "MXX-AYT-4578", "device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
-		"redirect_url": "http://127.0.0.1",
+		"email": "preauth_void@flutter.co", "firstname": "preauth", "lastname": "void",
+		"phonenumber": "081245554343", "IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
+		"device_fingerprint": "69e6b7f0sb722037ba8428b70fbe03986c",
+		"redirect_url":       "http://127.0.0.1",
 	}
 
 	// Preauthorize card
@@ -489,7 +507,8 @@ func TestVerifyTransaction(t *testing.T) {
 		"name": "verifyTransaction", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "300", "expiryyear": "19",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
-		"email": "verifyTransaction@flutter.co", "IP": "103.238.105.185", "txRef": "MXX-ASC-4578",
+		"email": "verifyTransaction@flutter.co", "firstname": "verify", "lastname": "transaction",
+		"phonenumber": "081245554343", "IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe03986c",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -526,7 +545,8 @@ func TestXrequeryTransactionVerification(t *testing.T) {
 		"name": "xrequery", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "5300", "expiryyear": "19",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
-		"email": "xrequery@flutter.co", "IP": "103.238.105.111", "txRef": "abcdef",
+		"email": "TestXrequery@flutter.co", "firstname": "xrequery", "lastname": "xrequery",
+		"phonenumber": "081245554343", "IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbe031234e",
 		"redirect_url":       "http://127.0.0.1",
 	}
@@ -567,7 +587,9 @@ func TestRefundTransaction(t *testing.T) {
 		"name": "TestRefund", "cardno": "5438898014560229", "currency": "NGN",
 		"country": "NG", "cvv": "789", "amount": "5300", "expiryyear": "19",
 		"expirymonth": "09", "suggested_auth": "pin", "pin": "3310",
-		"email": "TestRefund@flutter.co", "IP": "103.238.105.111", "txRef": "1dcdef",
+		"email": "TestRefundTransaction@flutter.co", "firstname": "refund",
+		"lastname": "transaction", "phonenumber": "081245554343",
+		"IP": "103.238.105.185", "txRef": "MXX-AYT-4578",
 		"device_fingerprint": "69e6b7f0sb72037aa8428b70fbx031234e",
 		"redirect_url":       "http://127.0.0.1",
 	}

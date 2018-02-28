@@ -1,8 +1,9 @@
 # go-rave
 
+[![Build Status](https://travis-ci.org/danidee10/go-rave.svg?branch=master)](https://travis-ci.org/danidee10/go-rave)
 [![Maintainability](https://api.codeclimate.com/v1/badges/60d8ae0dc97cbaca5089/maintainability)](https://codeclimate.com/github/danidee10/go-rave/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/60d8ae0dc97cbaca5089/test_coverage)](https://codeclimate.com/github/danidee10/go-rave/test_coverage)
-<img class="badge" tag="github.com/danidee10/go-rave" src="/badge/github.com/danidee10/go-rave">
+[![Go Report](https://goreportcard.com/badge/github.com/danidee10/go-rave)](https://goreportcard.com/github.com/danidee10/go-rave)
 
 go-rave is a Go library for flutterwave's [rave](http://rave.frontendpwc.com/) payment platform.
 
