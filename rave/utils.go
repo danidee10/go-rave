@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"runtime"
+	"strings"
 
 	"github.com/antonholmquist/jason"
 )
@@ -26,6 +28,18 @@ func mapToJSON(mapData map[string]interface{}) []byte {
 func checkRequiredParameters(params map[string]interface{}, keys []string) error {
 	for _, key := range keys {
 		if _, ok := params[key]; !ok {
+
+			// get caller name
+			pc, _, _, ok := runtime.Caller(1)
+
+			if ok {
+				funcDetails := runtime.FuncForPC(pc).Name()
+				details := strings.Split(funcDetails, ".")
+				funcName := details[len(details)-1]
+
+				return fmt.Errorf("\"%s\" is a required parameter for \"%s\"", key, funcName)
+			}
+
 			return fmt.Errorf("\"%s\" is a required parameter for this method", key)
 		}
 	}

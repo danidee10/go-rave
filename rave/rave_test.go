@@ -74,7 +74,7 @@ func TestSuggestedAuthPinRaisesError(t *testing.T) {
 	}
 	_, err := rave.ChargeCard(masterCard)
 
-	assertEqual(t, err.Error(), "\"pin\" is a required parameter for this method")
+	assertEqual(t, err.Error(), "\"pin\" is a required parameter for \"ChargeCard\"")
 }
 
 // Method should return "VBVSECURECODE" or "AVS_VBVSECURECODE" as the suggestedAuth
