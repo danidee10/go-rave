@@ -115,7 +115,7 @@ func TestSuggestedAuth3DesSecurePaymentRaisesError(t *testing.T) {
 
 	_, err := rave.ChargeCard(visaCard)
 
-	assertEqual(t, err.Error(), "\"redirect_url\" is a required parameter for this method")
+	assertEqual(t, err.Error(), "\"redirect_url\" is a required parameter for \"ChargeCard\"")
 }
 
 func TestMasterCardPaymentWithPin(t *testing.T) {
