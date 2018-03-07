@@ -9,8 +9,8 @@ import (
 // ChargeCard : Sends a Card request and determine the validation flow to be used
 func (r Rave) ChargeCard(chargeData map[string]interface{}) ([]byte, error) {
 	err := checkRequiredParameters(chargeData, []string{
-		"cardno", "cvv", "expirymonth", "expiryyear", "amount", "email", "phonenumber",
-		"firstname", "lastname", "IP", "txRef", "redirect_url",
+		"cardno", "cvv", "expirymonth", "expiryyear", "amount", "email",
+		"phonenumber", "firstname", "lastname", "IP", "txRef", "redirect_url",
 	})
 	if err != nil {
 		return nil, err
@@ -25,7 +25,6 @@ func (r Rave) ChargeCard(chargeData map[string]interface{}) ([]byte, error) {
 	// If suggested_auth == "PIN" was returned in the response
 	// Encrypt the client's data with the otp details and make another request
 	suggestedAuthData, _ := jason.NewObjectFromBytes(response)
-
 	data, _ := suggestedAuthData.GetObject("data")
 	suggestedAuth, _ := data.GetString("suggested_auth")
 
@@ -36,8 +35,7 @@ func (r Rave) ChargeCard(chargeData map[string]interface{}) ([]byte, error) {
 			return nil, err
 		}
 
-		postData = r.setUpCharge(chargeData)
-		response, err = r.charge(postData)
+		response, err = r.ChargeCard(chargeData)
 		if err != nil {
 			return nil, err
 		}

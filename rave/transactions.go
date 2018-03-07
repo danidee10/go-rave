@@ -159,3 +159,16 @@ func verifyChargedAmount(apiChargedAmount, funcChargedAmount int64) error {
 
 	return nil
 }
+
+// RefundTransaction : Refund direct charges
+func (r Rave) RefundTransaction(data map[string]interface{}) ([]byte, error) {
+	data["seckey"] = r.GetSecretKey()
+	URL := r.getBaseURL() + "/gpx/merchant/transactions/refund"
+
+	response, err := MakePostRequest(URL, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}

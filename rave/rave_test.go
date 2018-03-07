@@ -625,7 +625,7 @@ func TestRefundTransaction(t *testing.T) {
 }
 
 // Test Get fees endpoint
-func testGetFees(t *testing.T) {
+func TestGetFees(t *testing.T) {
 	t.Parallel()
 
 	data := map[string]interface{}{
@@ -634,7 +634,13 @@ func testGetFees(t *testing.T) {
 
 	response, _ := rave.GetFees(data)
 
-	fmt.Println(string(response[:]))
+	v, _ := jason.NewObjectFromBytes(response)
+	successMessage, _ := v.GetString("status")
+
+	if successMessage != "success" {
+		t.Error("The GetFees function did not succeed")
+		fmt.Println(string(response[:]))
+	}
 }
 
 // Test if the CalculateIntegrityCheckSum function returns valid results

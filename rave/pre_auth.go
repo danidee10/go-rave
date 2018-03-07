@@ -47,16 +47,3 @@ func (r Rave) RefundOrVoidPreauth(data map[string]interface{}) ([]byte, error) {
 
 	return response, nil
 }
-
-// RefundTransaction : Refund direct charges
-func (r Rave) RefundTransaction(data map[string]interface{}) ([]byte, error) {
-	data["seckey"] = r.GetSecretKey()
-	URL := r.getBaseURL() + "/gpx/merchant/transactions/refund"
-
-	response, err := MakePostRequest(URL, data)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
