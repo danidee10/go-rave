@@ -289,7 +289,7 @@ if err != nil {
 
 **Required parameters:** `amount`, `currency`
 
-To get the fee for a particular amount call `GetFee` with valid details.
+To get the fee for a particular amount call `GetFees` with valid details.
 
 ```go
 data := map[string]interface{}{
